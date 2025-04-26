@@ -305,6 +305,9 @@
         canvas.addEventListener('click', (e) => {
             if (ammo <= 0) {
                 triggerFireworks();
+                if (isMobile) {
+                    cursorEl.style.opacity = '0'; // Hide crosshair when out of ammo
+                }
                 return; // no ammo, show fireworks
             }
 
@@ -335,6 +338,50 @@
 
             if(!hit){createPoof(x,y);}
         });
+
+        // Add touch handling for mobile
+        if (isMobile) {
+            canvas.addEventListener('touchstart', (e) => {
+                e.preventDefault(); // Prevent default touch behavior
+                if (ammo <= 0) {
+                    triggerFireworks();
+                    cursorEl.style.opacity = '0'; // Hide crosshair when out of ammo
+                    return;
+                }
+
+                const rect = canvas.getBoundingClientRect();
+                const touch = e.touches[0];
+                const x = touch.clientX - rect.left;
+                const y = touch.clientY - rect.top;
+
+                // Move crosshair to touch position
+                cursorEl.style.left = `${touch.clientX}px`;
+                cursorEl.style.top = `${touch.clientY}px`;
+
+                let hit=false;
+                for (let i = bubbles.length - 1; i >= 0; i--) {
+                    const b = bubbles[i];
+                    const dx = x - b.x;
+                    const dy = y - b.y;
+                    if (dx * dx + dy * dy <= b.radius * b.radius) {
+                        explodeBubble(i);
+                        hit=true;
+                        break;
+                    }
+                }
+
+                // use ammo regardless of hit/miss
+                if (ammo > 0) {
+                    ammo--;
+                    const slots = ammoContainer.querySelectorAll('.ammo-slot');
+                    if (slots[ammo]) {
+                        slots[ammo].classList.add('used');
+                    }
+                }
+
+                if(!hit){createPoof(x,y);}
+            });
+        }
 
         // --- Helper Function: Hex to RGB ---
         function hexToRgb(hex) {
