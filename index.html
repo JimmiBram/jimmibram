@@ -15,6 +15,7 @@
             /* Deep, almost-black nebula-like background */
             background: radial-gradient(circle at 50% 20%, rgba(30,30,60,0.3) 0%, rgba(10,10,25,0.9) 60%, #060611 100%);
             overflow: hidden;
+            cursor: none; /* Hide default cursor */
             width: 100vw;
             height: 100vh;
             display: flex;
@@ -90,10 +91,45 @@
         .email-icon:hover svg {
           opacity: 1;
         }
+
+        /* Custom crosshair cursor */
+        #cursorCrosshair {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 28px;
+          height: 28px;
+          pointer-events: none;
+          z-index: 10000;
+          transform: translate(-50%, -50%);
+        }
+        #cursorCrosshair::before,
+        #cursorCrosshair::after {
+          content: "";
+          position: absolute;
+          background: #ffffff;
+        }
+        /* vertical line */
+        #cursorCrosshair::before {
+          width: 2px;
+          height: 100%;
+          left: 50%;
+          top: 0;
+          transform: translateX(-50%);
+        }
+        /* horizontal line */
+        #cursorCrosshair::after {
+          height: 2px;
+          width: 100%;
+          top: 50%;
+          left: 0;
+          transform: translateY(-50%);
+        }
     </style>
 </head>
 <body>
     <canvas id="bubbleCanvas"></canvas>
+    <div id="cursorCrosshair"></div>
     <a href="https://www.linkedin.com/in/jimmibram/" class="linkedin-icon" target="_blank" rel="noopener noreferrer">
       <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="#0A66C2">
         <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
@@ -134,6 +170,81 @@
         const bubbles = [];
         const maxBubbles = 20;
         let bubbleIdCounter = 0;
+
+        // --- Explosion Particles ---
+        const particles = [];
+
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                // Random velocity
+                const angle = Math.random() * Math.PI * 2;
+                const speed = 2 + Math.random() * 3;
+                this.vx = Math.cos(angle) * speed;
+                this.vy = Math.sin(angle) * speed;
+                this.radius = 3 + Math.random() * 3;
+                this.life = 0;
+                this.maxLife = 0.6 + Math.random() * 0.4; // seconds
+                this.opacity = 1;
+                this.color = color; // expects `rgb(r,g,b)` string
+            }
+
+            update(dt) {
+                this.life += dt;
+                // Simple physics
+                this.x += this.vx;
+                this.y += this.vy;
+                this.vy += 0.5 * dt; // slight gravity
+                // Fade and shrink
+                this.opacity = 1 - this.life / this.maxLife;
+                this.radius *= 0.96;
+            }
+
+            draw(ctx) {
+                if (this.opacity <= 0 || this.radius <= 0) return;
+                ctx.fillStyle = this.color.replace('rgb', 'rgba').replace(')', `, ${this.opacity})`);
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function explodeBubble(index) {
+            const bubble = bubbles[index];
+            // Generate particles using bubble base color (brighter)
+            const { r, g, b } = bubble.baseRgbColor;
+            const brightR = Math.min(255, r + 80);
+            const brightG = Math.min(255, g + 80);
+            const brightB = Math.min(255, b + 80);
+            const baseColorStr = `rgb(${brightR}, ${brightG}, ${brightB})`;
+
+            const particleCount = 12;
+            for (let i = 0; i < particleCount; i++) {
+                particles.push(new Particle(bubble.x, bubble.y, baseColorStr));
+            }
+
+            // Remove the bubble immediately
+            bubbles.splice(index, 1);
+        }
+
+        // Click handler to detect bubble click
+        canvas.addEventListener('click', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            // Iterate from top-most bubble to bottom
+            for (let i = bubbles.length - 1; i >= 0; i--) {
+                const b = bubbles[i];
+                const dx = x - b.x;
+                const dy = y - b.y;
+                if (dx * dx + dy * dy <= b.radius * b.radius) {
+                    explodeBubble(i);
+                    break;
+                }
+            }
+        });
 
         // --- Helper Function: Hex to RGB ---
         function hexToRgb(hex) {
@@ -550,26 +661,34 @@
                 }
             }
 
-             // --- Draw Metaball Layer ---
-             ctx.save();
-             // Apply filters for metaball effect
-             // Blur radius and contrast value are key to the effect's appearance
-             ctx.filter = 'blur(18px) contrast(30)';
-             // Optional: 'lighter' can make merges brighter
-             // ctx.globalCompositeOperation = 'lighter'; 
+            // --- Update & Draw Explosion Particles ---
+            for (let i = particles.length - 1; i >= 0; i--) {
+                particles[i].update(deltaTime);
+                if (particles[i].life >= particles[i].maxLife) {
+                    particles.splice(i, 1);
+                }
+            }
 
-             // Draw the shapes that will be merged by the filters
-             // This needs to happen *before* restoring the context
-             bubbles.forEach(bubble => {
-                 bubble.drawMetaballLayer();
-             });
+            // --- Draw Metaball Layer ---
+            ctx.save();
+            // Apply filters for metaball effect
+            // Blur radius and contrast value are key to the effect's appearance
+            ctx.filter = 'blur(18px) contrast(30)';
+            // Optional: 'lighter' can make merges brighter
+            // ctx.globalCompositeOperation = 'lighter'; 
 
-             // IMPORTANT: Draw a full canvas rect with the background color
-             // AFTER drawing the white shapes but BEFORE restoring. This prevents
-             // the white shapes bleeding to the edge due to the blur.
-             ctx.globalCompositeOperation = 'destination-in';
-             ctx.fillRect(0, 0, width, height);
-             ctx.restore(); // Restore context state (removes filter for next draws)
+            // Draw the shapes that will be merged by the filters
+            // This needs to happen *before* restoring the context
+            bubbles.forEach(bubble => {
+                bubble.drawMetaballLayer();
+            });
+
+            // IMPORTANT: Draw a full canvas rect with the background color
+            // AFTER drawing the white shapes but BEFORE restoring. This prevents
+            // the white shapes bleeding to the edge due to the blur.
+            ctx.globalCompositeOperation = 'destination-in';
+            ctx.fillRect(0, 0, width, height);
+            ctx.restore(); // Restore context state (removes filter for next draws)
 
 
             // --- Draw Bubbles and Text (On Top) ---
@@ -578,6 +697,9 @@
              bubbles.forEach(bubble => {
                  bubble.draw(); // Draws the main bubble and text
              });
+
+            // Draw particles on top
+            particles.forEach(p => p.draw(ctx));
 
             // // Optional: Display bubble count for debugging
             // ctx.fillStyle = 'white';
@@ -597,6 +719,13 @@
         // Start animation
         console.log('Starting animation...');
         animate(0);
+
+        // -- Custom cursor follow --
+        const cursorEl = document.getElementById('cursorCrosshair');
+        document.addEventListener('mousemove', (e) => {
+            cursorEl.style.left = `${e.clientX}px`;
+            cursorEl.style.top = `${e.clientY}px`;
+        });
 
     </script>
 </body>
