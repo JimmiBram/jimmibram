@@ -90,6 +90,8 @@
           pointer-events: none;
           z-index: 10000;
           transform: translate(-50%, -50%);
+          opacity: 0; /* Start hidden */
+          transition: opacity 0.5s ease;
         }
         #cursorCrosshair::before,
         #cursorCrosshair::after {
@@ -113,6 +115,25 @@
           left: 0;
           transform: translateY(-50%);
         }
+
+        /* Mobile-specific styles */
+        @media (hover: none) {
+          #cursorCrosshair {
+            width: 40px; /* Larger on mobile */
+            height: 40px;
+          }
+          #cursorCrosshair::before,
+          #cursorCrosshair::after {
+            background: rgba(255, 255, 255, 0.8);
+          }
+          #cursorCrosshair::before {
+            width: 3px;
+          }
+          #cursorCrosshair::after {
+            height: 3px;
+          }
+        }
+
         /* Ammo (brain) display */
         .ammo-container {
           position: fixed;
@@ -793,10 +814,25 @@
 
         // -- Custom cursor follow --
         const cursorEl = document.getElementById('cursorCrosshair');
-        document.addEventListener('mousemove', (e) => {
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+        if (isMobile) {
+          // Center the crosshair on mobile
+          cursorEl.style.left = '50%';
+          cursorEl.style.top = '50%';
+          
+          // Show crosshair after 2 seconds
+          setTimeout(() => {
+            cursorEl.style.opacity = '1';
+          }, 2000);
+        } else {
+          // Desktop behavior
+          document.addEventListener('mousemove', (e) => {
             cursorEl.style.left = `${e.clientX}px`;
             cursorEl.style.top = `${e.clientY}px`;
-        });
+            cursorEl.style.opacity = '1';
+          });
+        }
 
         function createPoof(x,y){
             const poofColor='rgba(200,200,200,1)';
