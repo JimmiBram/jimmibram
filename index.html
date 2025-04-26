@@ -205,6 +205,7 @@
         const bubbles = [];
         const maxBubbles = 20;
         let bubbleIdCounter = 0;
+        let childSpawnCount = 0; // Track how many bubbles have spawned children
 
         // --- Explosion Particles ---
         const particles = [];
@@ -386,7 +387,8 @@
                 this.state = 'growing'; // growing, drifting, splitting_start, splitting, fading
                 this.life = 0;
                 this.maxLife = 8 + Math.random() * 4; // seconds
-                this.splitTime = this.maxLife * (0.6 + Math.random() * 0.2); // Split around 60-80% of life
+                // Adjust splitTime based on childSpawnCount
+                this.splitTime = childSpawnCount < 2 ? 3 : this.maxLife * (0.6 + Math.random() * 0.2); // Split around 60-80% of life for normal bubbles, 3 seconds for first two
                 this.splitDuration = 0.6; // seconds for the split animation
                 this.splitProgress = 0;
                 this.opacity = parent ? 0 : 1; // Start transparent if child, fade in during grow
@@ -581,6 +583,7 @@
                      bubbles.push(child);
                      this.children.push(child);
                  }
+                 childSpawnCount++; // Increment the counter when children are spawned
                  console.log(`Spawned children for bubble ${this.id}. Total bubbles: ${bubbles.length}`);
                  return true; // Indicate success
             }
