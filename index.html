@@ -301,6 +301,28 @@
             bubbles.splice(index, 1);
         }
 
+        // -- Custom cursor follow --
+        const cursorEl = document.getElementById('cursorCrosshair');
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+        if (isMobile) {
+          // Center the crosshair on mobile
+          cursorEl.style.left = '50%';
+          cursorEl.style.top = '50%';
+          
+          // Show crosshair after 2 seconds
+          setTimeout(() => {
+            cursorEl.style.opacity = '1';
+          }, 2000);
+        } else {
+          // Desktop behavior - show crosshair immediately
+          cursorEl.style.opacity = '1';
+          document.addEventListener('mousemove', (e) => {
+            cursorEl.style.left = `${e.clientX}px`;
+            cursorEl.style.top = `${e.clientY}px`;
+          });
+        }
+
         // Click handler to detect bubble click
         canvas.addEventListener('click', (e) => {
             if (ammo <= 0) {
@@ -858,28 +880,6 @@
         // Start animation
         console.log('Starting animation...');
         animate(0);
-
-        // -- Custom cursor follow --
-        const cursorEl = document.getElementById('cursorCrosshair');
-        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-
-        if (isMobile) {
-          // Center the crosshair on mobile
-          cursorEl.style.left = '50%';
-          cursorEl.style.top = '50%';
-          
-          // Show crosshair after 2 seconds
-          setTimeout(() => {
-            cursorEl.style.opacity = '1';
-          }, 2000);
-        } else {
-          // Desktop behavior
-          document.addEventListener('mousemove', (e) => {
-            cursorEl.style.left = `${e.clientX}px`;
-            cursorEl.style.top = `${e.clientY}px`;
-            cursorEl.style.opacity = '1';
-          });
-        }
 
         function createPoof(x,y){
             const poofColor='rgba(200,200,200,1)';
