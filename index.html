@@ -180,12 +180,37 @@
           0% { transform: translate(0,0) scale(1); opacity:1; }
           100% { transform: translate(var(--dx), var(--dy)) scale(0.3); opacity:0; }
         }
+
+        /* Hint message */
+        .hint-message {
+          position: fixed;
+          top: 20px;
+          left: 50%;
+          transform: translateX(-50%);
+          background: rgba(255, 255, 255, 0.15);
+          padding: 12px 20px;
+          border-radius: 12px;
+          color: white;
+          font-family: 'Orbitron', sans-serif;
+          font-size: 14px;
+          text-align: center;
+          backdrop-filter: blur(4px);
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+          opacity: 0;
+          transition: opacity 0.5s ease;
+          z-index: 10001;
+          pointer-events: none;
+        }
+        .hint-message.visible {
+          opacity: 1;
+        }
     </style>
 </head>
 <body>
     <canvas id="bubbleCanvas"></canvas>
     <div id="cursorCrosshair"></div>
     <div id="ammoContainer" class="ammo-container"></div>
+    <div class="hint-message">Klik på spørgsmålene for at skyde dem ned</div>
     <a href="https://www.linkedin.com/in/jimmibram/" class="linkedin-icon" target="_blank" rel="noopener noreferrer">
       <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="#0A66C2">
         <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
@@ -227,6 +252,7 @@
         const maxBubbles = 20;
         let bubbleIdCounter = 0;
         let childSpawnCount = 0; // Track how many bubbles have spawned children
+        let bubblesPopped = 0; // Track how many bubbles have been popped
 
         // --- Explosion Particles ---
         const particles = [];
@@ -299,6 +325,8 @@
 
             // Remove the bubble immediately
             bubbles.splice(index, 1);
+            bubblesPopped++; // Increment popped count
+            updateHintVisibility(); // Update hint visibility
         }
 
         // -- Custom cursor follow --
@@ -811,6 +839,8 @@
                  bubbles[0].opacity = 1; // Ensure first bubble is visible
             }
 
+            // Update hint visibility
+            updateHintVisibility();
 
             // --- Update Bubbles ---
             for (let i = bubbles.length - 1; i >= 0; i--) {
@@ -913,6 +943,16 @@
                 part.style.background=`hsl(${Math.random()*360},80%,60%)`;
                 document.body.appendChild(part);
                 setTimeout(()=>part.remove(),600);
+            }
+        }
+
+        // Function to update hint visibility
+        function updateHintVisibility() {
+            const hintMessage = document.querySelector('.hint-message');
+            if (bubbles.length > 3 && bubblesPopped === 0) {
+                hintMessage.classList.add('visible');
+            } else {
+                hintMessage.classList.remove('visible');
             }
         }
 
