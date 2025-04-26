@@ -187,15 +187,15 @@
           top: 20px;
           left: 50%;
           transform: translateX(-50%);
-          background: rgba(255, 255, 255, 0.15);
+          background: rgba(255, 255, 255, 0.3); /* Increased from 0.15 */
           padding: 12px 20px;
           border-radius: 12px;
-          color: white;
+          color: rgba(255, 255, 255, 0.95); /* Added text opacity */
           font-family: 'Orbitron', sans-serif;
           font-size: 14px;
           text-align: center;
           backdrop-filter: blur(4px);
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3); /* Slightly darker shadow */
           opacity: 0;
           transition: opacity 0.5s ease;
           z-index: 10001;
@@ -253,8 +253,64 @@
         const bubbles = [];
         const maxBubbles = 20;
         let bubbleIdCounter = 0;
-        let childSpawnCount = 0; // Track how many bubbles have spawned children
-        let bubblesPopped = 0; // Track how many bubbles have been popped
+        let childSpawnCount = 0;
+        let bubblesPopped = 0;
+
+        // Audio context for sound effects
+        let audioContext;
+        try {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        } catch (e) {
+            console.log('Web Audio API not supported');
+        }
+
+        // Laser sound effect
+        function playLaserSound() {
+            if (!audioContext) return;
+
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            // Configure the laser sound - Star Wars style
+            oscillator.type = 'sawtooth';
+            // Start higher and sweep down more dramatically
+            oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+            oscillator.frequency.exponentialRampToValueAtTime(100, audioContext.currentTime + 0.15);
+
+            // More dramatic volume envelope
+            gainNode.gain.setValueAtTime(0.15, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.15, audioContext.currentTime + 0.05);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.15);
+
+            oscillator.start();
+            oscillator.stop(audioContext.currentTime + 0.15);
+        }
+
+        // Empty gun click sound
+        function playEmptyClick() {
+            if (!audioContext) return;
+
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            // Configure the click sound
+            oscillator.type = 'sine';
+            oscillator.frequency.setValueAtTime(100, audioContext.currentTime);
+            oscillator.frequency.exponentialRampToValueAtTime(50, audioContext.currentTime + 0.05);
+
+            // Quick click envelope
+            gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.05);
+
+            oscillator.start();
+            oscillator.stop(audioContext.currentTime + 0.05);
+        }
 
         // --- Explosion Particles ---
         const particles = [];
@@ -358,10 +414,14 @@
             if (ammo <= 0) {
                 triggerFireworks();
                 if (isMobile) {
-                    cursorEl.style.opacity = '0'; // Hide crosshair when out of ammo
+                    cursorEl.style.opacity = '0';
                 }
-                return; // no ammo, show fireworks
+                playEmptyClick(); // Play empty click sound
+                return;
             }
+
+            // Play laser sound when shooting
+            playLaserSound();
 
             const rect = canvas.getBoundingClientRect();
             const x = e.clientX - rect.left;
@@ -394,12 +454,16 @@
         // Add touch handling for mobile
         if (isMobile) {
             canvas.addEventListener('touchstart', (e) => {
-                e.preventDefault(); // Prevent default touch behavior
+                e.preventDefault();
                 if (ammo <= 0) {
                     triggerFireworks();
-                    cursorEl.style.opacity = '0'; // Hide crosshair when out of ammo
+                    cursorEl.style.opacity = '0';
+                    playEmptyClick(); // Play empty click sound
                     return;
                 }
+
+                // Play laser sound when shooting on mobile
+                playLaserSound();
 
                 const rect = canvas.getBoundingClientRect();
                 const touch = e.touches[0];
