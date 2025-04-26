@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jimmi Bram - her må du godt skyde de gode spørgsmål</title>
+    <title>Jimmi Bram - her kan du skyde de gode spørgsmål ned</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
         * {
@@ -170,11 +170,11 @@
         /* Firework particles */
         .fireworkParticle {
           position: fixed;
-          width: 14px;
-          height: 14px;
+          width: 40px; /* Doubled from 20px */
+          height: 40px; /* Doubled from 20px */
           border-radius: 50%;
           pointer-events: none;
-          animation: fireAnim 0.6s ease-out forwards;
+          animation: fireAnim 1s ease-out forwards; /* Slightly longer animation */
         }
         @keyframes fireAnim {
           0% { transform: translate(0,0) scale(1); opacity:1; }
@@ -230,14 +230,16 @@
         let height = canvas.height = window.innerHeight;
 
         const phrases = [
-            "Hvad er software i 2025?",
+            "Hvad er software i 2026?",
             "Hvordan rådgiver man i en foranderlig verden?",
             "Hvad skal de næste generationer lære?",
             "Hvad er en udvikler i 2026?",
             "Hvordan forstærker AI mine kompetencer?",
             "Er manuel software test stadig nødvendigt?",
             "Hvordan får vi junior udviklerne i gang?",
-            "Hvad med sikkerheden når AI udvikler?"
+            "Hvad med sikkerheden når AI udvikler?",
+            "Hvad nu med DevOps i en AI verden?", 
+            "Kan AI overholde kodestandarder?"
         ];
 
         const baseColors = [
@@ -933,7 +935,7 @@
                 const part=document.createElement('div');
                 part.className='fireworkParticle';
                 const angle=Math.random()*Math.PI*2;
-                const dist=60+Math.random()*40;
+                const dist=200+Math.random()*120; /* Doubled from 100+Math.random()*60 */
                 const dx=Math.cos(angle)*dist;
                 const dy=Math.sin(angle)*dist;
                 part.style.setProperty('--dx',dx+'px');
@@ -942,7 +944,7 @@
                 part.style.top=cy+'px';
                 part.style.background=`hsl(${Math.random()*360},80%,60%)`;
                 document.body.appendChild(part);
-                setTimeout(()=>part.remove(),600);
+                setTimeout(()=>part.remove(),1000); /* Increased from 800 */
             }
         }
 
