@@ -53,18 +53,6 @@
           opacity: 1;
         }
         
-        @keyframes float {
-          0% {
-            transform: translateY(0px);
-          }
-          50% {
-            transform: translateY(-10px);
-          }
-          100% {
-            transform: translateY(0px);
-          }
-        }
-        
         .email-icon {
           position: fixed;
           bottom: 20px;
@@ -125,11 +113,58 @@
           left: 0;
           transform: translateY(-50%);
         }
+        /* Ammo (brain) display */
+        .ammo-container {
+          position: fixed;
+          bottom: 20px;
+          right: 20px;
+          display: flex;
+          gap: 6px;
+          z-index: 10001;
+          pointer-events: none; /* allow clicks to pass through */
+        }
+        .ammo-slot {
+          width: 18px;
+          height: 18px;
+          border-radius: 50%;
+          background: #ff66cc; /* vibrant color */
+          box-shadow: 0 0 3px rgba(255,255,255,0.6);
+          transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+        .ammo-slot.used {
+           opacity: 0.25;
+           transform: scale(0.5);
+        }
+
+        /* Flash animation for LinkedIn icon when out of ammo */
+        @keyframes flash {
+          0% { filter: brightness(1); }
+          50% { filter: brightness(2) drop-shadow(0 0 6px rgba(255,255,255,0.9)); }
+          100% { filter: brightness(1); }
+        }
+        .linkedin-icon.flash {
+          animation: flash 0.4s ease;
+        }
+
+        /* Firework particles */
+        .fireworkParticle {
+          position: fixed;
+          width: 14px;
+          height: 14px;
+          border-radius: 50%;
+          pointer-events: none;
+          animation: fireAnim 0.6s ease-out forwards;
+        }
+        @keyframes fireAnim {
+          0% { transform: translate(0,0) scale(1); opacity:1; }
+          100% { transform: translate(var(--dx), var(--dy)) scale(0.3); opacity:0; }
+        }
     </style>
 </head>
 <body>
     <canvas id="bubbleCanvas"></canvas>
     <div id="cursorCrosshair"></div>
+    <div id="ammoContainer" class="ammo-container"></div>
     <a href="https://www.linkedin.com/in/jimmibram/" class="linkedin-icon" target="_blank" rel="noopener noreferrer">
       <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="#0A66C2">
         <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
@@ -173,6 +208,22 @@
 
         // --- Explosion Particles ---
         const particles = [];
+
+        // --- Ammo system ---
+        let ammo = 10;
+        const ammoContainer = document.getElementById('ammoContainer');
+        const fireworksIcon = document.querySelector('.email-icon');
+
+        function initAmmo() {
+          ammoContainer.innerHTML = '';
+          for (let i = 0; i < 10; i++) {
+            const slot = document.createElement('div');
+            slot.className = 'ammo-slot';
+            ammoContainer.appendChild(slot);
+          }
+        }
+
+        initAmmo();
 
         class Particle {
             constructor(x, y, color) {
@@ -230,20 +281,37 @@
 
         // Click handler to detect bubble click
         canvas.addEventListener('click', (e) => {
+            if (ammo <= 0) {
+                triggerFireworks();
+                return; // no ammo, show fireworks
+            }
+
             const rect = canvas.getBoundingClientRect();
             const x = e.clientX - rect.left;
             const y = e.clientY - rect.top;
 
-            // Iterate from top-most bubble to bottom
+            let hit=false;
             for (let i = bubbles.length - 1; i >= 0; i--) {
                 const b = bubbles[i];
                 const dx = x - b.x;
                 const dy = y - b.y;
                 if (dx * dx + dy * dy <= b.radius * b.radius) {
                     explodeBubble(i);
+                    hit=true;
                     break;
                 }
             }
+
+            // use ammo regardless of hit/miss
+            if (ammo > 0) {
+                ammo--;
+                const slots = ammoContainer.querySelectorAll('.ammo-slot');
+                if (slots[ammo]) {
+                    slots[ammo].classList.add('used');
+                }
+            }
+
+            if(!hit){createPoof(x,y);}
         });
 
         // --- Helper Function: Hex to RGB ---
@@ -726,6 +794,41 @@
             cursorEl.style.left = `${e.clientX}px`;
             cursorEl.style.top = `${e.clientY}px`;
         });
+
+        function createPoof(x,y){
+            const poofColor='rgba(200,200,200,1)';
+            const count=8;
+            for(let i=0;i<count;i++){
+                particles.push(new Particle(x,y,poofColor));
+            }
+        }
+
+        // Fireworks trigger when out of ammo
+        function triggerFireworks(){
+            if(!fireworksIcon) return;
+            fireworksIcon.classList.add('flash');
+            setTimeout(()=>fireworksIcon.classList.remove('flash'),400);
+
+            const rect=fireworksIcon.getBoundingClientRect();
+            const cx=rect.left+rect.width/2;
+            const cy=rect.top+rect.height/2;
+            const count=32;
+            for(let i=0;i<count;i++){
+                const part=document.createElement('div');
+                part.className='fireworkParticle';
+                const angle=Math.random()*Math.PI*2;
+                const dist=60+Math.random()*40;
+                const dx=Math.cos(angle)*dist;
+                const dy=Math.sin(angle)*dist;
+                part.style.setProperty('--dx',dx+'px');
+                part.style.setProperty('--dy',dy+'px');
+                part.style.left=cx+'px';
+                part.style.top=cy+'px';
+                part.style.background=`hsl(${Math.random()*360},80%,60%)`;
+                document.body.appendChild(part);
+                setTimeout(()=>part.remove(),600);
+            }
+        }
 
     </script>
 </body>
