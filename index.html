@@ -12,7 +12,8 @@
             box-sizing: border-box;
         }
         body {
-            background-color: #000510; /* Dark blue background */
+            /* Deep, almost-black nebula-like background */
+            background: radial-gradient(circle at 50% 20%, rgba(30,30,60,0.3) 0%, rgba(10,10,25,0.9) 60%, #060611 100%);
             overflow: hidden;
             width: 100vw;
             height: 100vh;
@@ -76,7 +77,9 @@
         .email-icon svg {
           opacity: 0.85;
           transition: opacity 0.3s;
-          fill: #cccccc; 
+          stroke: #d0d0d0;
+          stroke-width: 2;
+          fill: none; /* Outline style */
         }
         
         .email-icon:hover {
@@ -86,7 +89,6 @@
         
         .email-icon:hover svg {
           opacity: 1;
-          fill: #ffffff;
         }
     </style>
 </head>
@@ -98,8 +100,10 @@
       </svg>
     </a>
     <a href="mailto:hej@jimmibram.dk" class="email-icon" title="Send Email">
-      <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24">
-        <path d="M22 5.5c0-.276-.224-.5-.5-.5h-19c-.276 0-.5.224-.5.5v13c0 .276.224.5.5.5h19c.276 0 .5-.224.5-.5v-13zm-1 1.5l-8.5 5.667-8.5-5.667h17zm-17 11v-10.439l8.5 5.667 8.5-5.667v10.439h-17z"/>
+      <!-- Modern minimalist envelope icon -->
+      <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="2.5" y="5" width="19" height="14" rx="2" ry="2"/>
+        <polyline points="3,6 12,13 21,6"/>
       </svg>
     </a>
     <script>
