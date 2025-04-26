@@ -258,58 +258,84 @@
 
         // Audio context for sound effects
         let audioContext;
-        try {
-            audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        } catch (e) {
-            console.log('Web Audio API not supported');
+        let audioEnabled = false;
+
+        // Initialize audio on first user interaction
+        function initAudio() {
+            if (!audioEnabled) {
+                try {
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    audioEnabled = true;
+                    // Resume audio context in case it was suspended
+                    if (audioContext.state === 'suspended') {
+                        audioContext.resume();
+                    }
+                } catch (e) {
+                    console.log('Web Audio API not supported');
+                }
+            }
         }
 
         // Laser sound effect
         function playLaserSound() {
+            if (!audioEnabled) {
+                initAudio();
+                return;
+            }
+
             if (!audioContext) return;
 
-            const oscillator = audioContext.createOscillator();
-            const gainNode = audioContext.createGain();
+            try {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
 
-            oscillator.connect(gainNode);
-            gainNode.connect(audioContext.destination);
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
 
-            // Configure the laser sound - Star Wars style
-            oscillator.type = 'sawtooth';
-            // Start higher and sweep down more dramatically
-            oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
-            oscillator.frequency.exponentialRampToValueAtTime(100, audioContext.currentTime + 0.15);
+                // Configure the laser sound - Star Wars style
+                oscillator.type = 'sawtooth';
+                oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+                oscillator.frequency.exponentialRampToValueAtTime(100, audioContext.currentTime + 0.15);
 
-            // More dramatic volume envelope
-            gainNode.gain.setValueAtTime(0.15, audioContext.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.15, audioContext.currentTime + 0.05);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.15);
+                gainNode.gain.setValueAtTime(0.15, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.15, audioContext.currentTime + 0.05);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.15);
 
-            oscillator.start();
-            oscillator.stop(audioContext.currentTime + 0.15);
+                oscillator.start();
+                oscillator.stop(audioContext.currentTime + 0.15);
+            } catch (e) {
+                console.log('Error playing laser sound:', e);
+            }
         }
 
         // Empty gun click sound
         function playEmptyClick() {
+            if (!audioEnabled) {
+                initAudio();
+                return;
+            }
+
             if (!audioContext) return;
 
-            const oscillator = audioContext.createOscillator();
-            const gainNode = audioContext.createGain();
+            try {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
 
-            oscillator.connect(gainNode);
-            gainNode.connect(audioContext.destination);
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
 
-            // Configure the click sound
-            oscillator.type = 'sine';
-            oscillator.frequency.setValueAtTime(100, audioContext.currentTime);
-            oscillator.frequency.exponentialRampToValueAtTime(50, audioContext.currentTime + 0.05);
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(100, audioContext.currentTime);
+                oscillator.frequency.exponentialRampToValueAtTime(50, audioContext.currentTime + 0.05);
 
-            // Quick click envelope
-            gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.05);
+                gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.05);
 
-            oscillator.start();
-            oscillator.stop(audioContext.currentTime + 0.05);
+                oscillator.start();
+                oscillator.stop(audioContext.currentTime + 0.05);
+            } catch (e) {
+                console.log('Error playing empty click sound:', e);
+            }
         }
 
         // --- Explosion Particles ---
@@ -411,12 +437,13 @@
 
         // Click handler to detect bubble click
         canvas.addEventListener('click', (e) => {
+            initAudio(); // Initialize audio on first click
             if (ammo <= 0) {
                 triggerFireworks();
                 if (isMobile) {
                     cursorEl.style.opacity = '0';
                 }
-                playEmptyClick(); // Play empty click sound
+                playEmptyClick();
                 return;
             }
 
@@ -455,10 +482,11 @@
         if (isMobile) {
             canvas.addEventListener('touchstart', (e) => {
                 e.preventDefault();
+                initAudio(); // Initialize audio on first touch
                 if (ammo <= 0) {
                     triggerFireworks();
                     cursorEl.style.opacity = '0';
-                    playEmptyClick(); // Play empty click sound
+                    playEmptyClick();
                     return;
                 }
 
@@ -570,10 +598,10 @@
                 // State Management
                 this.state = 'growing'; // growing, drifting, splitting_start, splitting, fading
                 this.life = 0;
-                this.maxLife = 8 + Math.random() * 4; // seconds
+                this.maxLife = 15 + Math.random() * 5; // Increased from 8-12 to 15-20 seconds
                 // Adjust splitTime based on childSpawnCount
-                this.splitTime = childSpawnCount < 2 ? 3 : this.maxLife * (0.6 + Math.random() * 0.2); // Split around 60-80% of life for normal bubbles, 3 seconds for first two
-                this.splitDuration = 0.6; // seconds for the split animation
+                this.splitTime = childSpawnCount < 2 ? 5 : this.maxLife * (0.7 + Math.random() * 0.2); // Split around 70-90% of life for normal bubbles, 5 seconds for first two
+                this.splitDuration = 1.0; // Increased from 0.6 to 1.0 seconds for the split animation
                 this.splitProgress = 0;
                 this.opacity = parent ? 0 : 1; // Start transparent if child, fade in during grow
                 this.targetOpacity = 1;
@@ -723,8 +751,8 @@
                      // Children handle their own growth/fade in
 
                 } else if (this.state === 'fading') {
-                     this.radius *= 0.95; // Continue shrinking
-                     this.opacity += (this.targetOpacity - this.opacity) * 0.05; // Fade towards target (usually 0)
+                     this.radius *= 0.98; // Slower shrinking (was 0.95)
+                     this.opacity += (this.targetOpacity - this.opacity) * 0.02; // Slower fade (was 0.05)
                      if (this.radius < 1 || this.opacity < 0.01) {
                          this.radius = 0;
                          this.opacity = 0;
