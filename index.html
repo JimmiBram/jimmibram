@@ -1,577 +1,599 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Space Travel</title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-    
-    body {
-      overflow: hidden;
-      background-color: #000;
-      width: 100vw;
-      height: 100vh;
-      position: relative;
-      perspective: 500px;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
-    
-    .stars {
-      position: absolute;
-      width: 100%;
-      height: 100%;
-    }
-    
-    .star {
-      position: absolute;
-      background-color: #fff;
-      border-radius: 50%;
-      z-index: 1;
-    }
-    
-    .planet {
-      position: absolute;
-      border-radius: 50%;
-      z-index: 2;
-    }
-    
-    .flying-text {
-      position: absolute;
-      color: rgba(255, 255, 255, 0.95);
-      font-weight: 700;
-      z-index: 3;
-      transform-style: preserve-3d;
-      pointer-events: none;
-      text-align: center;
-      max-width: 300px;
-      border-radius: 50%;
-      word-wrap: break-word;
-      padding: 40px; /* Increased padding for more margin */
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-sizing: border-box;
-      backface-visibility: hidden; /* Prevent flickering during animation */
-      will-change: transform, opacity, left, top; /* Optimize for animation */
-      overflow: hidden;
-      line-height: 1.4; /* Better line spacing */
-      letter-spacing: 0.5px; /* Better readability */
-      
-      /* Create perfect circle */
-      aspect-ratio: 1/1;
-      
-      /* Smooth transitions */
-      transition: 
-        background 0.5s ease-out,
-        border 0.5s ease-out;
-      
-      /* More subtle glass/orb effect with reduced opacity */
-      background: radial-gradient(
-        circle at 30% 30%,
-        rgba(255, 200, 100, 0.08) 0%,
-        rgba(255, 120, 50, 0.06) 30%,
-        rgba(255, 70, 20, 0.04) 60%,
-        rgba(0, 0, 0, 0) 80%
-      );
-      
-      /* More subtle shadow for 3D effect */
-      box-shadow: 
-        inset 0 0 20px rgba(255, 150, 0, 0.1),
-        0 0 15px rgba(255, 100, 0, 0.08);
-    }
-    
-    @keyframes flicker {
-      0% { text-shadow: 0 0 4px rgba(255, 255, 255, 0.8), 0 0 8px rgba(255, 200, 50, 0.7), 0 0 12px rgba(255, 100, 20, 0.4), 0 0 16px rgba(255, 50, 0, 0.3); }
-      33% { text-shadow: 0 0 4px rgba(255, 255, 255, 0.8), 0 0 10px rgba(255, 180, 30, 0.8), 0 0 14px rgba(255, 80, 10, 0.5), 0 0 18px rgba(255, 30, 0, 0.4); }
-      66% { text-shadow: 0 0 4px rgba(255, 255, 255, 0.8), 0 0 6px rgba(255, 220, 70, 0.6), 0 0 10px rgba(255, 120, 30, 0.3), 0 0 14px rgba(255, 70, 0, 0.2); }
-      100% { text-shadow: 0 0 4px rgba(255, 255, 255, 0.8), 0 0 8px rgba(255, 200, 50, 0.7), 0 0 12px rgba(255, 100, 20, 0.4), 0 0 16px rgba(255, 50, 0, 0.3); }
-    }
-    
-    .linkedin-icon {
-      position: fixed;
-      bottom: 20px;
-      left: 20px;
-      z-index: 10;
-      animation: float 3s ease-in-out infinite;
-      filter: drop-shadow(0 0 8px rgba(10, 102, 194, 0.6));
-      transition: filter 0.3s, transform 0.3s;
-    }
-    
-    .linkedin-icon svg {
-      opacity: 0.85;
-      transition: opacity 0.3s;
-    }
-    
-    .linkedin-icon:hover {
-      filter: drop-shadow(0 0 12px rgba(10, 102, 194, 0.8));
-      transform: scale(1.1) translateY(-5px);
-    }
-    
-    .linkedin-icon:hover svg {
-      opacity: 1;
-    }
-    
-    @keyframes float {
-      0% {
-        transform: translateY(0px);
-      }
-      50% {
-        transform: translateY(-10px);
-      }
-      100% {
-        transform: translateY(0px);
-      }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bubble Pop Questions</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background-color: #000510; /* Dark blue background */
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Orbitron', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        canvas {
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        .linkedin-icon {
+          position: fixed;
+          bottom: 20px;
+          left: 20px;
+          z-index: 10;
+          animation: float 3s ease-in-out infinite;
+          filter: drop-shadow(0 0 8px rgba(10, 102, 194, 0.6));
+          transition: filter 0.3s, transform 0.3s;
+        }
+        
+        .linkedin-icon svg {
+          opacity: 0.85;
+          transition: opacity 0.3s;
+        }
+        
+        .linkedin-icon:hover {
+          filter: drop-shadow(0 0 12px rgba(10, 102, 194, 0.8));
+          transform: scale(1.1) translateY(-5px);
+        }
+        
+        .linkedin-icon:hover svg {
+          opacity: 1;
+        }
+        
+        @keyframes float {
+          0% {
+            transform: translateY(0px);
+          }
+          50% {
+            transform: translateY(-10px);
+          }
+          100% {
+            transform: translateY(0px);
+          }
+        }
+        
+        .email-icon {
+          position: fixed;
+          bottom: 20px;
+          left: 83px; 
+          z-index: 10;
+          animation: float 3s 0.2s ease-in-out infinite;
+          filter: drop-shadow(0 0 6px rgba(200, 200, 200, 0.5));
+          transition: filter 0.3s, transform 0.3s;
+        }
+        
+        .email-icon svg {
+          opacity: 0.85;
+          transition: opacity 0.3s;
+          fill: #cccccc; 
+        }
+        
+        .email-icon:hover {
+          filter: drop-shadow(0 0 10px rgba(220, 220, 220, 0.7));
+          transform: scale(1.1) translateY(-5px);
+        }
+        
+        .email-icon:hover svg {
+          opacity: 1;
+          fill: #ffffff;
+        }
+    </style>
 </head>
 <body>
-  <div class="stars"></div>
-  <a href="https://www.linkedin.com/in/jimmibram/" class="linkedin-icon" target="_blank" rel="noopener noreferrer">
-    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="#0A66C2">
-      <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
-    </svg>
-  </a>
-  
-  <script>
-    const starsContainer = document.querySelector('.stars');
-    const starCount = 200;
-    const planetCount = 5;
-    const maxDepth = 1000;
-    
-    // Danish phrases that will fly toward the viewer
-    const phrases = [
-      "Hvad er software i 2025?",
-      "Hvordan rådgiver man i en foranderlig verden?",
-      "Hvad skal de næste generationer lære?",
-      "Hvad er en udvikler i 2026?"
-    ];
-    
-    // Create stars
-    for (let i = 0; i < starCount; i++) {
-      createStar();
-    }
-    
-    // Create planets
-    for (let i = 0; i < planetCount; i++) {
-      createPlanet();
-    }
-    
-    // Create flying text elements
-    phrases.forEach((phrase, index) => {
-      setTimeout(() => {
-        createFlyingText(phrase);
-      }, index * 6000); // Stagger the appearance of each phrase by 6 seconds
-    });
-    
-    // Set interval to continuously create new flying text
-    setInterval(() => {
-      const randomPhrase = phrases[Math.floor(Math.random() * phrases.length)];
-      createFlyingText(randomPhrase);
-    }, 8000); // Create a new phrase every 8 seconds to allow more reading time
-    
-    function createStar() {
-      const star = document.createElement('div');
-      star.className = 'star';
-      
-      // Random initial position
-      const x = Math.random() * window.innerWidth - window.innerWidth / 2;
-      const y = Math.random() * window.innerHeight - window.innerHeight / 2;
-      const z = Math.random() * maxDepth;
-      
-      // Random brightness (opacity)
-      const opacity = Math.random() * 0.8 + 0.2;
-      
-      // Set star properties
-      star.style.opacity = opacity;
-      
-      // Store position data for animation
-      star.dataset.x = x;
-      star.dataset.y = y;
-      star.dataset.z = z;
-      star.dataset.speed = 0.2 + Math.random() * 0.8;
-      
-      updateStarPosition(star);
-      
-      starsContainer.appendChild(star);
-    }
-    
-    function createPlanet() {
-      const planet = document.createElement('div');
-      planet.className = 'planet';
-      
-      // Random initial position
-      const x = (Math.random() * 2 - 1) * window.innerWidth;
-      const y = (Math.random() * 2 - 1) * window.innerHeight;
-      const z = Math.random() * maxDepth + maxDepth * 0.5;
-      
-      // Generate random planet color
-      const hue = Math.random() * 360;
-      const saturation = 70 + Math.random() * 30;
-      const lightness = 20 + Math.random() * 30;
-      planet.style.backgroundColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
-      
-      // Random size
-      const baseSize = 5 + Math.random() * 15;
-      
-      // Store position data for animation
-      planet.dataset.x = x;
-      planet.dataset.y = y;
-      planet.dataset.z = z;
-      planet.dataset.baseSize = baseSize;
-      planet.dataset.speed = 0.2 + Math.random() * 0.3;
-      
-      updatePlanetPosition(planet);
-      
-      starsContainer.appendChild(planet);
-    }
-    
-    function updateStarPosition(star) {
-      const x = parseFloat(star.dataset.x);
-      const y = parseFloat(star.dataset.y);
-      const z = parseFloat(star.dataset.z);
-      
-      // Calculate perspective scale
-      const scale = maxDepth / (z === 0 ? 0.1 : z);
-      
-      // Position with perspective
-      star.style.left = `${x * scale + window.innerWidth / 2}px`;
-      star.style.top = `${y * scale + window.innerHeight / 2}px`;
-      
-      // Size varies with distance
-      const size = Math.max(0.5, 3 * scale / 5);
-      star.style.width = `${size}px`;
-      star.style.height = `${size}px`;
-    }
-    
-    function updatePlanetPosition(planet) {
-      const x = parseFloat(planet.dataset.x);
-      const y = parseFloat(planet.dataset.y);
-      const z = parseFloat(planet.dataset.z);
-      const baseSize = parseFloat(planet.dataset.baseSize);
-      
-      // Calculate perspective scale
-      const scale = maxDepth / (z === 0 ? 0.1 : z);
-      
-      // Position with perspective
-      planet.style.left = `${x * scale + window.innerWidth / 2}px`;
-      planet.style.top = `${y * scale + window.innerHeight / 2}px`;
-      
-      // Size varies with distance
-      const size = Math.max(1, baseSize * scale / 3);
-      planet.style.width = `${size}px`;
-      planet.style.height = `${size}px`;
-      
-      // Add some shadow for 3D effect
-      planet.style.boxShadow = `inset ${-size/5}px ${-size/8}px ${size/3}px rgba(0,0,0,0.8)`;
-    }
-    
-    function createFlyingText(text) {
-      const textElement = document.createElement('div');
-      textElement.className = 'flying-text';
-      
-      // Simpler layout - use fewer lines to make text more readable
-      // and prevent the squeeze effect
-      const words = text.split(' ');
-      
-      // Format the text in 2-3 short lines to make it more compact and readable
-      const wordsPerLine = Math.ceil(words.length / (words.length > 6 ? 3 : 2));
-      let formattedText = '';
-      
-      for (let i = 0; i < words.length; i += wordsPerLine) {
-        // Get a chunk of words for this line
-        const line = words.slice(i, i + wordsPerLine).join(' ');
-        formattedText += line + (i + wordsPerLine < words.length ? '<br>' : '');
-      }
-      
-      // Set the formatted HTML
-      textElement.innerHTML = formattedText;
-      
-      // Random initial position (far away) but more centered for smoother motion
-      const x = (Math.random() * 0.6 - 0.3) * window.innerWidth; // Keep text more centered
-      const y = (Math.random() * 0.6 - 0.3) * window.innerHeight; // Keep text more centered
-      const z = maxDepth * 2.5; // Start far away
-      
-      // Text base color (orange/red hues for fire effect)
-      const hue = 20 + Math.random() * 30; // 20-50 range (orange-red)
-      const saturation = 90 + Math.random() * 10;
-      const lightness = 70 + Math.random() * 20;
-      textElement.style.color = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
-      
-      // Add fire animation with slower pulsation
-      const flickerSpeed = 1500 + Math.random() * 500; // 1500-2000ms range (much slower)
-      textElement.style.animation = `flicker ${flickerSpeed}ms infinite`;
-      
-      // Base size calculation - consistent sizing
-      const baseSize = 18 + Math.random() * 8; // Less random variation
-      
-      // Store position data for animation
-      textElement.dataset.x = x;
-      textElement.dataset.y = y;
-      textElement.dataset.z = z;
-      textElement.dataset.baseSize = baseSize;
-      textElement.dataset.startTime = Date.now(); // Store creation time for smooth animation
-      textElement.dataset.duration = 12000; // 12 seconds to travel through view
-      
-      // Fixed speed for smoother animation - no speed randomness
-      textElement.dataset.speed = z / 300; // Consistent movement speed
-      
-      // Pre-compute size values to ensure consistency
-      // These values are stored and used in updateFlyingTextPosition
-      const textLength = textElement.innerText.length;
-      textElement.dataset.aspectRatio = 1; // Perfect circle (width/height ratio)
-      textElement.dataset.minSize = 90; // Increased minimum size (was 70)
-      textElement.dataset.maxSize = 240; // Increased maximum size (was 200)
-      
-      // Adjust size based on text length - longer text gets larger orbs
-      if (textLength > 30) {
-        textElement.dataset.minSize = 110;
-        textElement.dataset.maxSize = 280;
-      }
-      
-      updateFlyingTextPosition(textElement);
-      
-      starsContainer.appendChild(textElement);
-      
-      // Remove the text element after it's traveled through view
-      setTimeout(() => {
-        if (textElement.parentNode) {
-          // Fade out the element before removing it
-          textElement.style.transition = 'opacity 1s ease-out';
-          textElement.style.opacity = '0';
-          
-          // Actually remove after fade completes
-          setTimeout(() => {
-            if (textElement.parentNode) {
-              textElement.parentNode.removeChild(textElement);
+    <canvas id="bubbleCanvas"></canvas>
+    <a href="https://www.linkedin.com/in/jimmibram/" class="linkedin-icon" target="_blank" rel="noopener noreferrer">
+      <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="#0A66C2">
+        <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
+      </svg>
+    </a>
+    <a href="mailto:hej@jimmibram.dk" class="email-icon" title="Send Email">
+      <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24">
+        <path d="M22 5.5c0-.276-.224-.5-.5-.5h-19c-.276 0-.5.224-.5.5v13c0 .276.224.5.5.5h19c.276 0 .5-.224.5-.5v-13zm-1 1.5l-8.5 5.667-8.5-5.667h17zm-17 11v-10.439l8.5 5.667 8.5-5.667v10.439h-17z"/>
+      </svg>
+    </a>
+    <script>
+        const canvas = document.getElementById('bubbleCanvas');
+        const ctx = canvas.getContext('2d');
+        let width = canvas.width = window.innerWidth;
+        let height = canvas.height = window.innerHeight;
+
+        const phrases = [
+            "Hvad er software i 2025?",
+            "Hvordan rådgiver man i en foranderlig verden?",
+            "Hvad skal de næste generationer lære?",
+            "Hvad er en udvikler i 2026?",
+            "Hvordan forstærker AI mine kompetencer?",
+            "Er manuel software test stadig nødvendigt?",
+            "Hvordan får vi junior udviklerne i gang?",
+            "Hvad med sikkerheden når AI udvikler?"
+        ];
+
+        const baseColors = [
+            '#202060', // Dark Indigo
+            '#602080', // Purple
+            '#b030b0', // Magenta/Fuchsia
+            '#6c91bf', // Steel Blue
+            '#5bc8af'  // Medium Aquamarine
+        ];
+
+        const bubbles = [];
+        const maxBubbles = 20;
+        let bubbleIdCounter = 0;
+
+        // --- Helper Function: Hex to RGB ---
+        function hexToRgb(hex) {
+            let bigint = parseInt(hex.slice(1), 16);
+            let r = (bigint >> 16) & 255;
+            let g = (bigint >> 8) & 255;
+            let b = bigint & 255;
+            return { r, g, b };
+        }
+
+        // --- Phrase Manager ---
+        const phraseManager = (() => {
+            const maxRecent = 5;
+            let recentlyUsedIndices = [];
+
+            return {
+                getNextPhrase: () => {
+                    const availableIndices = phrases
+                        .map((_, index) => index)
+                        .filter(index => !recentlyUsedIndices.includes(index));
+
+                    let selectedIndex;
+                    if (availableIndices.length > 0) {
+                        // Select from available (unused) indices
+                        selectedIndex = availableIndices[Math.floor(Math.random() * availableIndices.length)];
+                    } else {
+                        // All phrases used recently, pick any random one
+                        selectedIndex = Math.floor(Math.random() * phrases.length);
+                    }
+
+                    // Update recently used queue
+                    recentlyUsedIndices.push(selectedIndex);
+                    if (recentlyUsedIndices.length > maxRecent) {
+                        recentlyUsedIndices.shift(); // Remove the oldest index
+                    }
+
+                    return phrases[selectedIndex];
+                }
+            };
+        })();
+
+        // --- Bubble Class ---
+        class Bubble {
+            constructor(x, y, radius, text, parent = null) {
+                this.id = bubbleIdCounter++;
+                this.x = x;
+                this.y = y;
+                this.targetRadius = radius;
+                this.radius = parent ? 0 : radius * 0.1; // Start small if child
+                this.text = text;
+                this.parent = parent;
+                this.children = [];
+
+                // --- Color Selection ---
+                this.baseHexColor = baseColors[Math.floor(Math.random() * baseColors.length)];
+                this.baseRgbColor = hexToRgb(this.baseHexColor);
+
+                // Text Color (calculate a contrasting light color)
+                // Simple brightness check for contrast
+                const brightness = (this.baseRgbColor.r * 299 + this.baseRgbColor.g * 587 + this.baseRgbColor.b * 114) / 1000;
+                this.textColor = brightness > 128 ? 'rgba(0, 0, 0, 0.9)' : 'rgba(255, 255, 255, 0.9)';
+
+                // Movement
+                this.vx = parent ? parent.vx + (Math.random() - 0.5) * 1 : (Math.random() - 0.5) * 2; // Inherit some velocity
+                this.vy = parent ? parent.vy + (Math.random() - 0.5) * 1 : (Math.random() - 0.5) * 2;
+                this.targetX = x; // Target for drifting
+                this.targetY = y; // Target for drifting
+                this.setNewTarget();
+
+                // State Management
+                this.state = 'growing'; // growing, drifting, splitting_start, splitting, fading
+                this.life = 0;
+                this.maxLife = 8 + Math.random() * 4; // seconds
+                this.splitTime = this.maxLife * (0.6 + Math.random() * 0.2); // Split around 60-80% of life
+                this.splitDuration = 0.6; // seconds for the split animation
+                this.splitProgress = 0;
+                this.opacity = parent ? 0 : 1; // Start transparent if child, fade in during grow
+                this.targetOpacity = 1;
             }
-          }, 1000);
+
+            calculateRequiredRadiusForText() {
+                // Don't calculate if radius is tiny
+                if (this.radius < 5) return this.radius;
+
+                // 1. Determine font size based on *current* radius
+                let fontSize = Math.max(8, Math.min(20, this.radius / 3.8));
+                ctx.font = `bold ${fontSize}px 'Orbitron', sans-serif`;
+
+                // 2. Wrap text based on current radius estimate
+                const words = this.text.split(' ');
+                let line = '';
+                const lines = [];
+                const maxWidth = this.radius * 1.3; // Use the same factor as drawText
+                let maxLineWidth = 0;
+
+                for (let n = 0; n < words.length; n++) {
+                    const testLine = line + words[n] + ' ';
+                    const metrics = ctx.measureText(testLine);
+                    const testWidth = metrics.width;
+                    if (testWidth > maxWidth && n > 0) {
+                        lines.push(line);
+                        maxLineWidth = Math.max(maxLineWidth, ctx.measureText(line).width);
+                        line = words[n] + ' ';
+                    } else {
+                        line = testLine;
+                    }
+                }
+                lines.push(line);
+                maxLineWidth = Math.max(maxLineWidth, ctx.measureText(line).width);
+
+                // 3. Calculate text block dimensions
+                const lineHeight = fontSize * 1.2;
+                const totalTextHeight = lines.length * lineHeight;
+                const totalTextWidth = maxLineWidth;
+
+                // 4. Calculate required radius (diagonal / 2 + margin)
+                // Calculate distance from center to corner of text box
+                const halfWidth = totalTextWidth / 2;
+                const halfHeight = totalTextHeight / 2;
+                const distToCorner = Math.sqrt(halfWidth * halfWidth + halfHeight * halfHeight);
+
+                // Add margin (e.g., 30% larger than text bounds)
+                const requiredRadius = distToCorner * 1.3;
+
+                // Return the larger of current target or required, with a minimum size
+                return Math.max(20, requiredRadius); // Ensure a minimum bubble size
+            }
+
+            setNewTarget() {
+                // Set a new random target position within bounds for drifting
+                const margin = this.targetRadius * 1.5;
+                this.targetX = Math.random() * (width - 2 * margin) + margin;
+                this.targetY = Math.random() * (height - 2 * margin) + margin;
+            }
+
+            update(deltaTime) {
+                this.life += deltaTime;
+
+                // State transitions & updates
+                if (this.state === 'growing') {
+                    this.radius += (this.targetRadius - this.radius) * 0.15; // Faster growth
+                    this.opacity += (this.targetOpacity - this.opacity) * 0.1; // Fade in
+
+                    // Continuously check and update target radius if text needs more space
+                    const requiredRadius = this.calculateRequiredRadiusForText();
+                    if (requiredRadius > this.targetRadius) {
+                        this.targetRadius = requiredRadius;
+                    }
+
+                    // Transition to drifting when close enough to the target radius
+                    if (Math.abs(this.targetRadius - this.radius) < 1) {
+                        this.radius = this.targetRadius;
+                        this.opacity = this.targetOpacity;
+                        this.state = 'drifting';
+                    }
+
+                    if (this.life > this.splitTime && bubbles.length < maxBubbles - 1 && this.children.length === 0) { // Ensure space & not already split
+                       this.state = 'splitting_start';
+                       this.splitProgress = 0;
+                    } else if (this.life > this.maxLife) {
+                         this.state = 'fading';
+                         this.targetOpacity = 0; // Start fade out
+                    }
+
+                } else if (this.state === 'drifting') {
+                    // Move towards target
+                    const dx = this.targetX - this.x;
+                    const dy = this.targetY - this.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+
+                    const moveSpeed = 0.8 + (this.targetRadius / 150); // Slightly faster drift
+                    if (dist > 1) { // Avoid division by zero/jitter
+                        this.vx += (dx / dist) * moveSpeed * 0.1;
+                        this.vy += (dy / dist) * moveSpeed * 0.1;
+                    }
+
+                    // Apply friction/damping
+                    this.vx *= 0.97;
+                    this.vy *= 0.97;
+
+                    this.x += this.vx;
+                    this.y += this.vy;
+
+                    // If close to target, set a new one
+                    if (dist < this.targetRadius * 0.3) {
+                        this.setNewTarget();
+                    }
+
+                    // Check if it's time to split
+                    if (this.life > this.splitTime && bubbles.length < maxBubbles - 1 && this.children.length === 0) { // Ensure space & not already split
+                       this.state = 'splitting_start';
+                       this.splitProgress = 0;
+                    } else if (this.life > this.maxLife) {
+                         this.state = 'fading';
+                         this.targetOpacity = 0; // Start fade out
+                    }
+
+                } else if (this.state === 'splitting_start') {
+                     // Spawn children immediately
+                     if (this.spawnChildren()) { // Only proceed if children were actually spawned
+                         this.state = 'splitting';
+                         this.targetOpacity = 0; // Parent starts fading during split
+                     } else {
+                         // Couldn't spawn (max limit reached), go back to drifting or start fading
+                         this.state = this.life > this.maxLife ? 'fading' : 'drifting';
+                     }
+
+                } else if (this.state === 'splitting') {
+                     this.splitProgress += deltaTime / this.splitDuration;
+                     // Parent shrinks and fades during split
+                     const easeOutQuad = t => t * (2 - t);
+                     const progressEased = easeOutQuad(this.splitProgress);
+
+                     this.radius = this.targetRadius * (1 - progressEased); // Shrink parent
+                     this.opacity += (this.targetOpacity - this.opacity) * 0.1; // Fade out parent
+
+                     if (this.splitProgress >= 1) {
+                         this.radius = 0; // Ensure parent is gone visually
+                         this.opacity = 0;
+                         this.state = 'fading'; // Transition to final state
+                     }
+                     // Children handle their own growth/fade in
+
+                } else if (this.state === 'fading') {
+                     this.radius *= 0.95; // Continue shrinking
+                     this.opacity += (this.targetOpacity - this.opacity) * 0.05; // Fade towards target (usually 0)
+                     if (this.radius < 1 || this.opacity < 0.01) {
+                         this.radius = 0;
+                         this.opacity = 0;
+                         // Marked for removal in main loop
+                     }
+                }
+
+                // Keep within bounds (gentle push back)
+                const pushForce = 0.1;
+                if (this.x < this.radius) { this.vx += pushForce; this.x = this.radius; }
+                if (this.x > width - this.radius) { this.vx -= pushForce; this.x = width - this.radius; }
+                if (this.y < this.radius) { this.vy += pushForce; this.y = this.radius; }
+                if (this.y > height - this.radius) { this.vy -= pushForce; this.y = height - this.radius; }
+            }
+
+            spawnChildren() {
+                 if (bubbles.length >= maxBubbles - 1) {
+                     console.log('Max bubbles reached, cannot spawn children.');
+                     return false; // Indicate failure
+                 }
+
+                 const angleOffset = Math.random() * Math.PI * 2; // Random start direction
+                 for (let i = 0; i < 2; i++) {
+                     const angle = angleOffset + i * Math.PI; // Spawn 180 degrees apart
+                     const childRadius = this.targetRadius * (0.5 + Math.random() * 0.2); // 50-70% of parent size
+                     // Start exactly at parent center for sticky effect
+                     const childX = this.x; 
+                     const childY = this.y;
+                     const childText = phraseManager.getNextPhrase(); // Use the manager
+
+                     const child = new Bubble(childX, childY, childRadius, childText, this);
+                     // Give initial outward velocity relative to parent
+                     const speedBoost = 4 + Math.random() * 2;
+                     child.vx = this.vx + Math.cos(angle) * speedBoost;
+                     child.vy = this.vy + Math.sin(angle) * speedBoost;
+                     child.state = 'growing'; // Start child in growing state
+                     child.opacity = 0; // Start child transparent
+                     child.radius = 0; // Start child tiny
+
+                     bubbles.push(child);
+                     this.children.push(child);
+                 }
+                 console.log(`Spawned children for bubble ${this.id}. Total bubbles: ${bubbles.length}`);
+                 return true; // Indicate success
+            }
+
+            draw() {
+                if (this.radius <= 0.1 || this.opacity <= 0.01) return;
+
+                // --- Draw the main visible bubble with a gradient --- 
+                const { r, g, b } = this.baseRgbColor;
+
+                // Create radial gradient (center lighter, edge darker)
+                const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.radius);
+
+                // Center color (lighter, slightly less saturated)
+                const centerR = Math.min(255, r + 60);
+                const centerG = Math.min(255, g + 60);
+                const centerB = Math.min(255, b + 60);
+                gradient.addColorStop(0, `rgba(${centerR}, ${centerG}, ${centerB}, ${this.opacity * 0.9})`);
+
+                // Mid color (close to original)
+                gradient.addColorStop(0.7, `rgba(${r}, ${g}, ${b}, ${this.opacity * 0.75})`);
+
+                // Edge color (darker)
+                const edgeR = Math.max(0, r - 50);
+                const edgeG = Math.max(0, g - 50);
+                const edgeB = Math.max(0, b - 50);
+                gradient.addColorStop(1, `rgba(${edgeR}, ${edgeG}, ${edgeB}, ${this.opacity * 0.7})`);
+
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fill();
+
+                // --- Text Drawing ---
+                if (this.radius > 10 && this.opacity > 0.1) {
+                   this.drawText();
+                }
+            }
+
+             // Separate drawing function for the metaball effect layer
+             drawMetaballLayer() {
+                 if (this.radius <= 0.1 || this.opacity <= 0.01) return;
+
+                 // Draw slightly larger for the blur effect.
+                 const metaballRadius = this.radius * 1.4;
+                  
+                 // Calculate a bright version of the base color for the glow layer
+                 const { r, g, b } = this.baseRgbColor;
+                 const glowR = Math.min(255, r + 100);
+                 const glowG = Math.min(255, g + 100);
+                 const glowB = Math.min(255, b + 100);
+                 // Use RGB for the metaball layer (no alpha needed before filters)
+                 ctx.fillStyle = `rgb(${glowR}, ${glowG}, ${glowB})`; 
+
+                 ctx.beginPath();
+                 ctx.arc(this.x, this.y, metaballRadius, 0, Math.PI * 2);
+                 ctx.fill();
+             }
+
+            drawText() {
+                const maxTextWidth = this.radius * 1.6; // Allow text slightly wider than radius
+                let fontSize = Math.max(8, Math.min(20, this.radius / 3.8)); 
+
+                ctx.font = `bold ${fontSize}px 'Orbitron', sans-serif`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                // Adjust text opacity based on bubble opacity, but keep it readable
+                const textOpacity = Math.min(1, this.opacity * 1.5);
+                // Ensure text color uses the calculated opacity
+                if (this.textColor.startsWith('rgba')) {
+                   ctx.fillStyle = this.textColor.replace(/,[^,]+$/, `, ${textOpacity})`);
+                } else {
+                    // Fallback if textColor wasn't calculated as rgba
+                    ctx.fillStyle = `rgba(255, 255, 255, ${textOpacity})`; 
+                }
+
+                // Basic word wrapping
+                const words = this.text.split(' ');
+                let line = '';
+                const lines = [];
+                const maxWidth = this.radius * 1.3; // Further reduced max width for more margin
+                const lineHeight = fontSize * 1.2;
+
+                for (let n = 0; n < words.length; n++) {
+                    const testLine = line + words[n] + ' ';
+                    const metrics = ctx.measureText(testLine);
+                    const testWidth = metrics.width;
+                    if (testWidth > maxWidth && n > 0) {
+                        lines.push(line);
+                        line = words[n] + ' ';
+                    } else {
+                        line = testLine;
+                    }
+                }
+                lines.push(line);
+
+                const totalTextHeight = lines.length * lineHeight;
+                let startY = this.y - totalTextHeight / 2 + lineHeight / 2;
+
+                // Adjust font size if text block is too tall for the bubble radius
+                if (totalTextHeight > this.radius * 1.3) { // Further reduced allowed height for more margin
+                    fontSize *= (this.radius * 1.3) / totalTextHeight;
+                    // Re-check minimum font size
+                    fontSize = Math.max(8, fontSize);
+                    ctx.font = `bold ${fontSize}px 'Orbitron', sans-serif`;
+                     // Recalculate line height and startY
+                     const newLineHeight = fontSize * 1.2;
+                     const newTotalTextHeight = lines.length * newLineHeight;
+                     startY = this.y - newTotalTextHeight / 2 + newLineHeight / 2;
+                }
+
+                // Draw the lines of text
+                lines.forEach((l, index) => {
+                    // Prevent text overflowing vertically if many lines
+                    // Use the tighter margin calculation here too
+                    ctx.fillText(l.trim(), this.x, startY + index * lineHeight);
+                });
+            }
         }
-      }, 12000); // 12 seconds travel time + buffer
-    }
-    
-    function updateFlyingTextPosition(textElement) {
-      // Use time-based animation for smoother motion
-      const startTime = parseFloat(textElement.dataset.startTime);
-      const duration = parseFloat(textElement.dataset.duration);
-      const now = Date.now();
-      const elapsedTime = now - startTime;
-      
-      // Calculate progress as a percentage (0 to 1)
-      const progress = Math.min(1, elapsedTime / duration);
-      
-      // Get initial position values
-      const initialX = parseFloat(textElement.dataset.x);
-      const initialY = parseFloat(textElement.dataset.y);
-      const initialZ = parseFloat(textElement.dataset.z);
-      
-      // Calculate current Z position using easing for smooth deceleration
-      // Use cubic ease-out for natural motion
-      const easeOutCubic = t => 1 - Math.pow(1 - t, 3);
-      
-      // Calculate z position - start from initialZ and move to 0
-      const z = initialZ * (1 - easeOutCubic(progress));
-      
-      // Update z position in dataset for other calculations
-      textElement.dataset.z = z;
-      
-      // Calculate perspective scale
-      // Prevent division by zero and clamp minimum scale
-      const scale = Math.min(10, maxDepth / Math.max(50, z));
-      
-      // Adjust the 2D position to maintain trajectory
-      // Add very slight movement on x and y axes for more natural motion
-      const screenCenterX = window.innerWidth / 2;
-      const screenCenterY = window.innerHeight / 2;
-      
-      // Size calculation - use stored min/max for consistency
-      const minSize = parseFloat(textElement.dataset.minSize);
-      const maxSize = parseFloat(textElement.dataset.maxSize);
-      const baseSize = parseFloat(textElement.dataset.baseSize);
-      
-      // Calculate size with easing for smooth transitions
-      // Size increases as object gets closer
-      const sizeProgress = 1 - Math.max(0, Math.min(1, z / initialZ));
-      const sizeFactor = minSize + (maxSize - minSize) * easeOutCubic(sizeProgress);
-      
-      // Set fixed circle dimensions - maintain perfect circle
-      const circleSize = Math.max(minSize, Math.min(maxSize, sizeFactor));
-      textElement.style.width = `${circleSize}px`;
-      textElement.style.height = `${circleSize}px`;
-      
-      // Font size calculation - based on circle size with more conservative sizing
-      // Smaller font for longer texts and account for increased padding
-      const textLength = textElement.innerText.length;
-      const fontScale = Math.min(1, 25 / Math.max(25, textLength));
-      
-      // Further reduce the size factor to account for increased padding
-      // This ensures text stays well within the orb's boundaries with a comfortable margin
-      const fontSize = Math.max(10, circleSize * 0.15 * fontScale);
-      textElement.style.fontSize = `${fontSize}px`;
-      
-      // Calculate position based on progress
-      // Objects follow a trajectory toward the center with slight drift
-      const positionEasing = t => 1 - Math.pow(1 - t, 2.5); // Custom easing for position
-      const positionProgress = positionEasing(progress);
-      
-      // Gradual movement toward center
-      const currentX = initialX * (1 - positionProgress * 0.9); // 90% toward center
-      const currentY = initialY * (1 - positionProgress * 0.9); // 90% toward center
-      
-      // Apply position with scale for perspective
-      const posX = currentX * scale + screenCenterX;
-      const posY = currentY * scale + screenCenterY;
-      
-      // Apply position
-      textElement.style.left = `${posX}px`;
-      textElement.style.top = `${posY}px`;
-      
-      // Fire effect intensity based on proximity
-      const fireIntensity = Math.min(1, Math.max(0.2, easeOutCubic(sizeProgress)));
-      
-      // Fire glow increases as object gets closer
-      const glowSize = 10 + 10 * fireIntensity;
-      textElement.style.textShadow = `
-        0 0 4px rgba(255, 255, 255, 0.8),
-        0 0 ${glowSize * 0.6}px rgba(255, 220, 150, 0.8),
-        0 0 ${glowSize}px rgba(255, 130, 50, 0.6),
-        0 0 ${glowSize * 1.5}px rgba(255, 50, 0, 0.4)
-      `;
-      
-      // Very subtle background glow that intensifies with proximity
-      textElement.style.background = `radial-gradient(
-        circle, 
-        rgba(255,120,0,${0.1 * fireIntensity}) 0%, 
-        rgba(255,60,0,${0.07 * fireIntensity}) 40%, 
-        rgba(0,0,0,0) 70%
-      )`;
-      
-      // More subtle border
-      textElement.style.border = `1px solid rgba(255, 100, 0, ${0.15 + 0.2 * fireIntensity})`;
-      
-      // Opacity follows a bell curve - fade in, stay visible, fade out
-      let opacity = 1;
-      if (progress < 0.15) {
-        // Fade in at the start
-        opacity = progress / 0.15;
-      } else if (progress > 0.85) {
-        // Fade out at the end
-        opacity = (1 - progress) / 0.15;
-      }
-      textElement.style.opacity = Math.max(0, Math.min(1, opacity));
-      
-      // Smooth rotation based on position and time
-      // Assign consistent rotation values if not already set
-      if (!textElement.dataset.rotationSet) {
-        // Initial rotation based on position but constrained
-        const baseRotX = (initialY / window.innerHeight) * 15; // -7.5 to 7.5 degrees
-        const baseRotY = -(initialX / window.innerWidth) * 15; // -7.5 to 7.5 degrees
-        
-        // Store these values
-        textElement.dataset.baseRotX = baseRotX.toFixed(2);
-        textElement.dataset.baseRotY = baseRotY.toFixed(2);
-        
-        // Assign consistent wobble values
-        textElement.dataset.wobbleFreqX = (0.5 + Math.random() * 0.3).toFixed(2); // Slower wobble
-        textElement.dataset.wobbleFreqY = (0.4 + Math.random() * 0.3).toFixed(2); // Slower wobble
-        textElement.dataset.wobbleAmpX = (2 + Math.random() * 2).toFixed(2); // Small amplitude
-        textElement.dataset.wobbleAmpY = (2 + Math.random() * 2).toFixed(2); // Small amplitude
-        textElement.dataset.rotationSet = "true";
-      }
-      
-      // Get stored rotation values
-      const baseRotX = parseFloat(textElement.dataset.baseRotX);
-      const baseRotY = parseFloat(textElement.dataset.baseRotY);
-      const wobbleFreqX = parseFloat(textElement.dataset.wobbleFreqX); 
-      const wobbleFreqY = parseFloat(textElement.dataset.wobbleFreqY);
-      const wobbleAmpX = parseFloat(textElement.dataset.wobbleAmpX);
-      const wobbleAmpY = parseFloat(textElement.dataset.wobbleAmpY);
-      
-      // Calculate gentle wobble that diminishes as object gets closer
-      const wobbleReducer = Math.max(0.2, 1 - positionProgress); // Reduce wobble as it gets closer
-      const time = now / 1000; // Current time in seconds
-      const wobbleX = Math.sin(time * wobbleFreqX) * wobbleAmpX * wobbleReducer;
-      const wobbleY = Math.cos(time * wobbleFreqY) * wobbleAmpY * wobbleReducer;
-      
-      // Apply rotation with wobble
-      const rotateX = baseRotX + wobbleX;
-      const rotateY = baseRotY + wobbleY;
-      
-      // Apply transform
-      textElement.style.transform = `
-        rotateX(${rotateX}deg) 
-        rotateY(${rotateY}deg)
-      `;
-    }
-    
-    // Animation loop
-    function animate() {
-      // Update stars
-      document.querySelectorAll('.star').forEach(star => {
-        // Move forward (decrease z)
-        star.dataset.z -= parseFloat(star.dataset.speed);
-        
-        // If star goes out of view, reset it
-        if (star.dataset.z <= 0) {
-          star.dataset.z = maxDepth;
-          star.dataset.x = Math.random() * window.innerWidth - window.innerWidth / 2;
-          star.dataset.y = Math.random() * window.innerHeight - window.innerHeight / 2;
+
+        // --- Animation Loop ---
+        let lastTime = 0;
+        function animate(timestamp) {
+            const deltaTime = Math.min(0.05, (timestamp - lastTime) / 1000 || 0); // time in seconds, capped delta
+            lastTime = timestamp;
+
+            ctx.clearRect(0, 0, width, height);
+
+            // Spawn initial bubble if needed
+            if (bubbles.length === 0) {
+                 console.log('No bubbles, creating initial one.');
+                 const initialRadius = Math.min(width, height) * 0.16; // Make initial bubble larger
+                 bubbles.push(new Bubble(width / 2, height / 2, initialRadius, phraseManager.getNextPhrase())); // Use the manager
+                 bubbles[0].state = 'growing'; // Start first bubble growing
+                 bubbles[0].opacity = 1; // Ensure first bubble is visible
+            }
+
+
+            // --- Update Bubbles ---
+            for (let i = bubbles.length - 1; i >= 0; i--) {
+                bubbles[i].update(deltaTime);
+                // Remove faded/shrunken bubbles
+                if (bubbles[i].radius <= 0.1 && bubbles[i].opacity <= 0.01) {
+                    console.log(`Removing bubble ${bubbles[i].id}. Total bubbles: ${bubbles.length - 1}`);
+                    bubbles.splice(i, 1);
+                }
+            }
+
+             // --- Draw Metaball Layer ---
+             ctx.save();
+             // Apply filters for metaball effect
+             // Blur radius and contrast value are key to the effect's appearance
+             ctx.filter = 'blur(18px) contrast(30)';
+             // Optional: 'lighter' can make merges brighter
+             // ctx.globalCompositeOperation = 'lighter'; 
+
+             // Draw the shapes that will be merged by the filters
+             // This needs to happen *before* restoring the context
+             bubbles.forEach(bubble => {
+                 bubble.drawMetaballLayer();
+             });
+
+             // IMPORTANT: Draw a full canvas rect with the background color
+             // AFTER drawing the white shapes but BEFORE restoring. This prevents
+             // the white shapes bleeding to the edge due to the blur.
+             ctx.globalCompositeOperation = 'destination-in';
+             ctx.fillRect(0, 0, width, height);
+             ctx.restore(); // Restore context state (removes filter for next draws)
+
+
+            // --- Draw Bubbles and Text (On Top) ---
+            // Use default composite operation
+             ctx.globalCompositeOperation = 'source-over';
+             bubbles.forEach(bubble => {
+                 bubble.draw(); // Draws the main bubble and text
+             });
+
+            // // Optional: Display bubble count for debugging
+            // ctx.fillStyle = 'white';
+            // ctx.font = '14px Arial';
+            // ctx.textAlign = 'left';
+            // ctx.fillText(`Bubbles: ${bubbles.length}`, 10, 20);
+
+            requestAnimationFrame(animate);
         }
-        
-        updateStarPosition(star);
-      });
-      
-      // Update planets
-      document.querySelectorAll('.planet').forEach(planet => {
-        // Move forward (decrease z)
-        planet.dataset.z -= parseFloat(planet.dataset.speed);
-        
-        // If planet goes out of view, reset it
-        if (planet.dataset.z <= 0) {
-          planet.dataset.z = maxDepth + Math.random() * maxDepth;
-          planet.dataset.x = (Math.random() * 2 - 1) * window.innerWidth;
-          planet.dataset.y = (Math.random() * 2 - 1) * window.innerHeight;
-          
-          // Change color
-          const hue = Math.random() * 360;
-          const saturation = 70 + Math.random() * 30;
-          const lightness = 20 + Math.random() * 30;
-          planet.style.backgroundColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
-        }
-        
-        updatePlanetPosition(planet);
-      });
-      
-      // Update flying text
-      document.querySelectorAll('.flying-text').forEach(textElement => {
-        // Move forward (decrease z) very fast
-        textElement.dataset.z -= parseFloat(textElement.dataset.speed);
-        
-        // Update position
-        updateFlyingTextPosition(textElement);
-      });
-      
-      requestAnimationFrame(animate);
-    }
-    
-    // Start animation
-    animate();
-    
-    // Handle window resize
-    window.addEventListener('resize', () => {
-      // Recalculate positions based on new window size
-      document.querySelectorAll('.star, .planet').forEach(element => {
-        if (element.classList.contains('star')) {
-          updateStarPosition(element);
-        } else {
-          updatePlanetPosition(element);
-        }
-      });
-    });
-  </script>
+
+        // --- Event Listeners ---
+        window.addEventListener('resize', () => {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        });
+
+        // Start animation
+        console.log('Starting animation...');
+        animate(0);
+
+    </script>
 </body>
 </html>
