@@ -73,6 +73,7 @@
     let fpsCounter=0, fpsTime=0, currentFps=0;
     let score=0;
     let gameStartTime=null, showInstructions=true;
+    let testMode=false;
     
     // Mobile detection
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
@@ -98,7 +99,13 @@
       overlay.addEventListener('click', ()=>{ if(!isLocked) bg.requestPointerLock(); });
     }
     
-    document.addEventListener('keydown', e=>{ if(e.code==='Escape'&&isLocked) document.exitPointerLock(); });
+    document.addEventListener('keydown', e=>{ 
+      if(e.code==='Escape'&&isLocked) document.exitPointerLock();
+      if(e.code==='KeyX') {
+        testMode = !testMode;
+        console.log('Test mode:', testMode ? 'ON' : 'OFF');
+      }
+    });
 
     function resize() {
       const w=innerWidth, h=innerHeight;
@@ -435,6 +442,14 @@
         octx.fillText(`Avg: ${avgHz.toFixed(0)}Hz`, 20, 100);
         octx.fillText(`FPS: ${currentFps}`, 20, 130);
         
+        // Test mode indicator
+        if (testMode) {
+          octx.font = 'bold 28px Orbitron';
+          octx.fillStyle = '#ff4444';
+          octx.textAlign = 'center';
+          octx.fillText('TEST MODE', overlay.width / 2, 40);
+        }
+        
         // Score display in lower right corner
         octx.font = 'bold 32px Orbitron';
         octx.fillStyle = '#30ff62';
@@ -443,19 +458,27 @@
         
         // Results box
         if (samples.length > 50) {
-          // Calculate stability (standard deviation)
-          const variance = samples.reduce((acc, val) => acc + Math.pow(val - avgHz, 2), 0) / samples.length;
-          const stdDev = Math.sqrt(variance);
-          const stabilityPercent = Math.max(0, 100 - (stdDev / avgHz * 100));
+          // Find the bin with the highest percentage
+          const counts = Array(9).fill(0);
+          samples.forEach(h => {
+            let i = Math.floor((h - binRanges[0].min) / (binRanges[1].min - binRanges[0].min));
+            i = Math.max(0, Math.min(8, i));
+            counts[i]++;
+          });
+          const maxCount = Math.max(...counts);
+          const maxPercentage = (maxCount / samples.length) * 100;
           
           let resultText, resultColor;
-          if (stabilityPercent > 80) {
+          if (maxPercentage > 95) {
+            resultText = "Perfect poll rate stability";
+            resultColor = '#30ff62';
+          } else if (maxPercentage > 80) {
             resultText = "Excellent poll rate stability";
             resultColor = '#30ff62';
-          } else if (stabilityPercent > 60) {
+          } else if (maxPercentage > 60) {
             resultText = "Good poll rate stability";
             resultColor = '#ffff00';
-          } else if (stabilityPercent > 40) {
+          } else if (maxPercentage > 40) {
             resultText = "Fairly stable poll rate";
             resultColor = '#ff8800';
           } else {
@@ -569,7 +592,16 @@
     function recordSample(dt) {
       if (dt <= 0) return;
       if (!samples.length) startTime = performance.now();
-      const hz = 1000/dt;
+      let hz = 1000/dt;
+      
+      // Add randomness in test mode
+      if (testMode) {
+        // Add random variation to make samples more scattered
+        const randomFactor = 0.3; // 30% random variation
+        const variation = (Math.random() - 0.5) * 2 * randomFactor;
+        hz = hz * (1 + variation);
+      }
+      
       samples.push(hz);
       updateBinRanges();
       const counts = Array(9).fill(0);
@@ -584,7 +616,8 @@
         const height = 80 + (c/maxC) * (500-80);
         box.style.height = height + 'px';
         box.style.backgroundColor = c > 0 ? '#30ff62' : '#161920';
-        box.querySelector('.count').textContent = c;
+        const percentage = samples.length > 0 ? Math.round((c / samples.length) * 100) : 0;
+        box.querySelector('.count').textContent = percentage + '%';
         box.querySelector('.label').innerHTML = binRanges[i].min < 0 ? '-' : 
           `${Math.round(binRanges[i].min)}Hz<br>to<br>${Math.round(binRanges[i].max)}Hz`;
         
