@@ -24,6 +24,11 @@
       pointer-events:none;
       z-index:1;
     }
+    
+    /* Hide UI elements on mobile */
+    .mobile #ui {
+      display: none;
+    }
     #bins { display:flex; align-items:center; height:400px; }
     .binBox { position:relative; width:70px; height:80px; margin:0 5px;
       background:#161920; border:3px solid #30ff62; border-radius:10px;
@@ -68,7 +73,16 @@
     let fpsCounter=0, fpsTime=0, currentFps=0;
     let score=0;
     let gameStartTime=null, showInstructions=true;
+    
+    // Mobile detection
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+                     (window.innerWidth <= 768 && window.innerHeight <= 1024);
 
+    // Add mobile class to body if mobile detected
+    if (isMobile) {
+      document.body.classList.add('mobile');
+    }
+    
     document.addEventListener('pointerlockchange', ()=>{
       isLocked = document.pointerLockElement === bg;
       document.body.classList.toggle('locked', isLocked);
@@ -76,9 +90,14 @@
         gameStartTime = performance.now();
       }
     });
-    bg.addEventListener('click', ()=>{ if(!isLocked) bg.requestPointerLock(); });
-    // also allow clicking the overlay to capture the mouse
-    overlay.addEventListener('click', ()=>{ if(!isLocked) bg.requestPointerLock(); });
+    
+    // Only add click handlers if not mobile
+    if (!isMobile) {
+      bg.addEventListener('click', ()=>{ if(!isLocked) bg.requestPointerLock(); });
+      // also allow clicking the overlay to capture the mouse
+      overlay.addEventListener('click', ()=>{ if(!isLocked) bg.requestPointerLock(); });
+    }
+    
     document.addEventListener('keydown', e=>{ if(e.code==='Escape'&&isLocked) document.exitPointerLock(); });
 
     function resize() {
@@ -138,62 +157,68 @@
       binsDiv.append(box);
     }
 
-    document.addEventListener('mousemove',e=>{
-      if(isLocked){
-        // Free-form space movement using quaternions for consistent control
-        const sensitivity = 0.002;
-        
-        // Create rotation quaternions
-        const yawQuat = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), -e.movementX * sensitivity);
-        const pitchQuat = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), -e.movementY * sensitivity);
-        
-        // Apply rotations to camera quaternion
-        camera.quaternion.multiply(yawQuat);
-        camera.quaternion.multiply(pitchQuat);
-        
-        // Update Euler angles for compatibility
-        yaw -= e.movementX * sensitivity;
-        pitch -= e.movementY * sensitivity;
-      }
-      const now=performance.now();
-      if(isLocked&&lastTime!==null){
-        const dt=now-lastTime;
-        if(dt>0) recordSample(dt);
-      }
-      lastTime=now;
-    });
-
-    document.addEventListener('mousedown',e=>{
-      if(!isLocked||e.button!==0) return;
-      
-      // LASER BEAM - shoot from crosshair direction
-      const beam = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.5, 0.5, 20, 8), // Big, long cylinder
-        new THREE.MeshBasicMaterial({color: 0xff0000, transparent: true, opacity: 1}) // BRIGHT RED
-      );
-      
-      // Get the direction the camera is facing
-      const direction = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
-      
-      // Position beam at camera position
-      beam.position.copy(camera.position);
-      
-      // Orient beam in the direction you're looking
-      beam.lookAt(camera.position.clone().add(direction.clone().multiplyScalar(100)));
-      beam.rotateX(Math.PI/2);
-      
-      scene.add(beam);
-      
-      // Store it for animation
-      laserBeams.push({
-        mesh: beam,
-        position: beam.position.clone(),
-        velocity: direction.clone().multiplyScalar(3), // Move in the direction you're looking
-        life: 100
+    // Only add mouse event listeners if not mobile
+    if (!isMobile) {
+      document.addEventListener('mousemove',e=>{
+        if(isLocked){
+          // Free-form space movement using quaternions for consistent control
+          const sensitivity = 0.002;
+          
+          // Create rotation quaternions
+          const yawQuat = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), -e.movementX * sensitivity);
+          const pitchQuat = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), -e.movementY * sensitivity);
+          
+          // Apply rotations to camera quaternion
+          camera.quaternion.multiply(yawQuat);
+          camera.quaternion.multiply(pitchQuat);
+          
+          // Update Euler angles for compatibility
+          yaw -= e.movementX * sensitivity;
+          pitch -= e.movementY * sensitivity;
+        }
+        const now=performance.now();
+        if(isLocked&&lastTime!==null){
+          const dt=now-lastTime;
+          if(dt>0) recordSample(dt);
+        }
+        lastTime=now;
       });
-      
-      console.log('RED LASER BEAM CREATED!');
-    });
+    }
+
+    // Only add mouse down listener if not mobile
+    if (!isMobile) {
+      document.addEventListener('mousedown',e=>{
+        if(!isLocked||e.button!==0) return;
+        
+        // LASER BEAM - shoot from crosshair direction
+        const beam = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.5, 0.5, 20, 8), // Big, long cylinder
+          new THREE.MeshBasicMaterial({color: 0xff0000, transparent: true, opacity: 1}) // BRIGHT RED
+        );
+        
+        // Get the direction the camera is facing
+        const direction = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
+        
+        // Position beam at camera position
+        beam.position.copy(camera.position);
+        
+        // Orient beam in the direction you're looking
+        beam.lookAt(camera.position.clone().add(direction.clone().multiplyScalar(100)));
+        beam.rotateX(Math.PI/2);
+        
+        scene.add(beam);
+        
+        // Store it for animation
+        laserBeams.push({
+          mesh: beam,
+          position: beam.position.clone(),
+          velocity: direction.clone().multiplyScalar(3), // Move in the direction you're looking
+          life: 100
+        });
+        
+        console.log('RED LASER BEAM CREATED!');
+      });
+    }
 
     function animate(){
       requestAnimationFrame(animate);
@@ -311,6 +336,53 @@
 
     function drawOverlay(){
       octx.clearRect(0,0,overlay.width,overlay.height);
+      
+      // Mobile message - show only background and mobile message
+      if (isMobile) {
+        const cx=overlay.width/2, cy=overlay.height/2;
+        const mobileText = "This app is made to test your mouse, not for mobile phones, open it on a physically bigger computer and have a blast";
+        
+        // Create a semi-transparent overlay for better text readability
+        octx.fillStyle = 'rgba(0,0,0,0.8)';
+        octx.fillRect(0, 0, overlay.width, overlay.height);
+        
+        // Draw the mobile message
+        octx.font = 'bold 24px Orbitron';
+        octx.fillStyle = '#30ff62';
+        octx.textAlign = 'center';
+        octx.textBaseline = 'middle';
+        
+        // Word wrap the text to fit the screen
+        const maxWidth = overlay.width - 80;
+        const words = mobileText.split(' ');
+        const lines = [];
+        let currentLine = '';
+        
+        words.forEach(word => {
+          const testLine = currentLine + (currentLine ? ' ' : '') + word;
+          const testWidth = octx.measureText(testLine).width;
+          
+          if (testWidth > maxWidth && currentLine) {
+            lines.push(currentLine);
+            currentLine = word;
+          } else {
+            currentLine = testLine;
+          }
+        });
+        if (currentLine) lines.push(currentLine);
+        
+        // Draw each line
+        const lineHeight = 35;
+        const totalHeight = lines.length * lineHeight;
+        const startY = cy - totalHeight / 2;
+        
+        lines.forEach((line, index) => {
+          octx.fillText(line, cx, startY + index * lineHeight);
+        });
+        
+        return; // Exit early for mobile
+      }
+      
       // reticle
       const cx=overlay.width/2, cy=overlay.height/2;
       octx.strokeStyle='rgba(255,255,255,0.6)';
