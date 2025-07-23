@@ -66,6 +66,7 @@
     const samples=[], particles=[], laserBeams=[];
     let binRanges=[], activeBeam=null;
     let fpsCounter=0, fpsTime=0, currentFps=0;
+    let score=0;
 
     document.addEventListener('pointerlockchange', ()=>{
       isLocked = document.pointerLockElement === bg;
@@ -245,6 +246,11 @@
           // HIT! Create green explosion
           const hitPoint = hitShape.position.clone();
           
+          // Calculate score based on distance
+          const distance = camera.position.distanceTo(hitShape.position);
+          const distanceScore = Math.floor(distance * 10); // 10 points per unit of distance
+          score += distanceScore;
+          
           // Remove the hit shape
           scene.remove(hitShape);
           const shapeIndex = shapes.indexOf(hitShape);
@@ -325,7 +331,7 @@
         octx.fillText(main, cx, yM + hM/2 + 16);
         
         // sub prompt box
-        const sub="And start the world's coolest mouse polling rate test";
+        const sub="And start the world's most entertaining mouse polling rate test";
         octx.font='26px Orbitron';
         const subWidth = octx.measureText(sub).width;
         const wS = subWidth + 60;
@@ -352,6 +358,12 @@
         octx.fillText(`Samples: ${samples.length}`, 20, 70);
         octx.fillText(`Avg: ${avgHz.toFixed(0)}Hz`, 20, 100);
         octx.fillText(`FPS: ${currentFps}`, 20, 130);
+        
+        // Score display in lower right corner
+        octx.font = 'bold 32px Orbitron';
+        octx.fillStyle = '#30ff62';
+        octx.textAlign = 'right';
+        octx.fillText(`Score: ${score}`, overlay.width - 20, overlay.height - 20);
         
         // Results box
         if (samples.length > 50) {
