@@ -67,10 +67,14 @@
     let binRanges=[], activeBeam=null;
     let fpsCounter=0, fpsTime=0, currentFps=0;
     let score=0;
+    let gameStartTime=null, showInstructions=true;
 
     document.addEventListener('pointerlockchange', ()=>{
       isLocked = document.pointerLockElement === bg;
       document.body.classList.toggle('locked', isLocked);
+      if (isLocked && gameStartTime === null) {
+        gameStartTime = performance.now();
+      }
     });
     bg.addEventListener('click', ()=>{ if(!isLocked) bg.requestPointerLock(); });
     // also allow clicking the overlay to capture the mouse
@@ -403,6 +407,14 @@
         }
       }
       
+      // Check if instructions should be hidden (after 5 seconds)
+      if (gameStartTime !== null && showInstructions) {
+        const elapsed = performance.now() - gameStartTime;
+        if (elapsed > 5000) { // 5 seconds
+          showInstructions = false;
+        }
+      }
+      
       // Draw explosion particles
       particles.forEach((p, i) => {
         if (p.life <= 0) {
@@ -444,6 +456,28 @@
           octx.fill();
         }
       });
+      
+      // Draw instruction text at the bottom when game starts
+      if (isLocked && showInstructions) {
+        const instructionText = "Shoot the objects to earn points, and learn about your polling rate at the same time";
+        octx.font = 'bold 24px Orbitron';
+        octx.fillStyle = '#30ff62';
+        octx.textAlign = 'center';
+        octx.textBaseline = 'bottom';
+        
+        // Add a semi-transparent background for better readability
+        const textWidth = octx.measureText(instructionText).width;
+        const textX = overlay.width / 2;
+        const textY = overlay.height - 40;
+        
+        octx.fillStyle = 'rgba(0,0,0,0.7)';
+        octx.beginPath();
+        octx.roundRect(textX - textWidth/2 - 20, textY - 30, textWidth + 40, 40, 10);
+        octx.fill();
+        
+        octx.fillStyle = '#30ff62';
+        octx.fillText(instructionText, textX, textY);
+      }
     }
 
     CanvasRenderingContext2D.prototype.roundRect=function(x,y,w,h,r){this.beginPath();this.moveTo(x+r,y);this.lineTo(x+w-r,y);this.quadraticCurveTo(x+w,y,x+w,y+r);this.lineTo(x+w,y+h-r);this.quadraticCurveTo(x+w,y+h,x+w-r,y+h);this.lineTo(x+r,y+h);this.quadraticCurveTo(x,y+h,x,y+h-r);this.lineTo(x,y+r);this.quadraticCurveTo(x,y,x+r,y);this.closePath();};
@@ -481,6 +515,17 @@
         box.querySelector('.count').textContent = c;
         box.querySelector('.label').innerHTML = binRanges[i].min < 0 ? '-' : 
           `${Math.round(binRanges[i].min)}Hz<br>to<br>${Math.round(binRanges[i].max)}Hz`;
+        
+        // Change text color to black when background is green for better readability
+        const label = box.querySelector('.label');
+        const count = box.querySelector('.count');
+        if (c > 0) {
+          label.style.color = '#000000';
+          count.style.color = '#000000';
+        } else {
+          label.style.color = '#39FF14';
+          count.style.color = '#30ff62';
+        }
       });
     }
   })();
