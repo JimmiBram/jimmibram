@@ -3,410 +3,522 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Jimmi Bram - Apps & Portfolio</title>
-  <!-- Orbitron font -->
+  <title>Hyperspeed to BramLabs.io</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'Orbitron', sans-serif !important;
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 100%; height: 100%;
+      overflow: hidden;
+      background: #000;
+      font-family: 'Orbitron', sans-serif;
+      cursor: default;
     }
-
-    body {
-      background: linear-gradient(135deg, #0a1a2a 0%, #1a3a4a 50%, #0f2a3a 100%);
-      min-height: 100vh;
-      color: #ffffff;
-      line-height: 1.6;
-      overflow-x: hidden;
-      position: relative;
-    }
-
-    body::before {
-      content: '';
+    canvas#stars {
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-image: 
-        radial-gradient(2px 2px at 20px 30px, #ffffff, transparent),
-        radial-gradient(2px 2px at 40px 70px, #ffffff, transparent),
-        radial-gradient(1px 1px at 90px 40px, #ffffff, transparent),
-        radial-gradient(1px 1px at 130px 80px, #ffffff, transparent),
-        radial-gradient(2px 2px at 160px 30px, #ffffff, transparent);
-      background-repeat: repeat;
-      background-size: 200px 100px;
-      opacity: 0.3;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
       z-index: 1;
+    }
+    #hud {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: 2;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    #hud-text {
+      font-size: clamp(1rem, 3vw, 2.2rem);
+      color: #00e5ff;
+      text-align: center;
+      text-shadow: 0 0 20px #00e5ff, 0 0 60px #00e5ff, 0 0 120px #0077ff;
+      letter-spacing: 3px;
+      opacity: 0;
+      transition: opacity 1.5s ease;
+      padding: 0 2rem;
+      line-height: 1.6;
+    }
+    #hud-text.visible { opacity: 1; }
+    #speed-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 3;
+      pointer-events: none;
+      text-align: center;
+    }
+    #speed-label {
+      font-size: clamp(0.6rem, 1.5vw, 0.9rem);
+      color: #00e5ff88;
+      letter-spacing: 5px;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    #speed-value {
+      font-size: clamp(1.2rem, 3vw, 2rem);
+      font-weight: 900;
+      color: #00e5ff;
+      text-shadow: 0 0 15px #00e5ff;
+    }
+    /* Scanline overlay */
+    #scanlines {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: 4;
+      pointer-events: none;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 229, 255, 0.015) 2px,
+        rgba(0, 229, 255, 0.015) 4px
+      );
+    }
+    /* Corner brackets */
+    .corner {
+      position: fixed;
+      width: 60px; height: 60px;
+      z-index: 3;
       pointer-events: none;
     }
-
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 2rem;
-      position: relative;
-      z-index: 2;
+    .corner::before, .corner::after {
+      content: '';
+      position: absolute;
+      background: #00e5ff44;
     }
-
-    .header {
-      text-align: center;
-      margin-bottom: 4rem;
-      position: relative;
+    .tl { top: 20px; left: 20px; }
+    .tl::before { top: 0; left: 0; width: 30px; height: 2px; }
+    .tl::after { top: 0; left: 0; width: 2px; height: 30px; }
+    .tr { top: 20px; right: 20px; }
+    .tr::before { top: 0; right: 0; width: 30px; height: 2px; }
+    .tr::after { top: 0; right: 0; width: 2px; height: 30px; }
+    .bl { bottom: 20px; left: 20px; }
+    .bl::before { bottom: 0; left: 0; width: 30px; height: 2px; }
+    .bl::after { bottom: 0; left: 0; width: 2px; height: 30px; }
+    .br { bottom: 20px; right: 20px; }
+    .br::before { bottom: 0; right: 0; width: 30px; height: 2px; }
+    .br::after { bottom: 0; right: 0; width: 2px; height: 30px; }
+    /* Planet */
+    #planet {
+      position: fixed;
+      z-index: 5;
+      pointer-events: auto;
+      cursor: pointer;
+      border-radius: 50%;
+      opacity: 0;
+      transition: transform 0.2s ease;
     }
-
-    .header h1 {
-      font-size: 4rem;
-      font-weight: 700;
-      color: #ffffff;
-      margin-bottom: 0.5rem;
-      text-shadow: 0 0 20px #ffd700, 0 0 40px #ffd700;
+    #planet:hover {
+      transform: scale(1.05);
+      filter: brightness(1.3);
+    }
+    #planet-label {
+      position: fixed;
+      z-index: 6;
+      pointer-events: none;
+      font-size: clamp(0.9rem, 1.8vw, 1.2rem);
+      color: #00e5ff;
+      text-shadow: 0 0 10px #00e5ff;
       letter-spacing: 3px;
-    }
-
-    .header p {
-      color: #ffd700;
-      font-size: 1.3rem;
-      text-shadow: 0 0 10px #ffd700;
-      letter-spacing: 1px;
-    }
-
-    .profile-section {
-      background: rgba(10, 26, 42, 0.8);
-      border: 3px solid #ffd700;
-      border-radius: 15px;
-      padding: 3rem;
-      margin-bottom: 3rem;
-      box-shadow: 0 0 30px rgba(255, 215, 0, 0.3);
-      display: flex;
-      align-items: center;
-      gap: 3rem;
-      flex-wrap: wrap;
-      backdrop-filter: blur(10px);
-      position: relative;
-    }
-
-    .profile-section::before {
-      content: '';
-      position: absolute;
-      top: -2px;
-      left: -2px;
-      right: -2px;
-      bottom: -2px;
-      background: linear-gradient(45deg, #ffd700, #ffed4e, #ffd700);
-      border-radius: 15px;
-      z-index: -1;
-      opacity: 0.7;
-    }
-
-    .profile-image {
-      width: 200px;
-      height: 200px;
-      border-radius: 50%;
-      object-fit: cover;
-      border: 4px solid #ffd700;
-      box-shadow: 0 0 25px #ffd700;
-      flex-shrink: 0;
-      image-rendering: pixelated;
-      position: relative;
-    }
-
-    .profile-image::after {
-      content: '';
-      position: absolute;
-      top: -4px;
-      left: -4px;
-      right: -4px;
-      bottom: -4px;
-      border-radius: 50%;
-      background: linear-gradient(45deg, #ffd700, #ffed4e, #ffd700);
-      z-index: -1;
-      animation: glow 2s ease-in-out infinite alternate;
-    }
-
-    @keyframes glow {
-      from { opacity: 0.5; }
-      to { opacity: 1; }
-    }
-
-    .profile-info {
-      flex: 1;
-      min-width: 300px;
-    }
-
-    .profile-name {
-      font-size: 2.5rem;
-      font-weight: 700;
-      color: #ffffff;
-      margin-bottom: 0.5rem;
-      text-shadow: 0 0 15px #ffd700;
-      letter-spacing: 2px;
-    }
-
-    .profile-title {
-      font-size: 1.2rem;
-      color: #ffd700;
-      font-weight: 600;
-      margin-bottom: 1rem;
-      text-shadow: 0 0 8px #ffd700;
-      letter-spacing: 1px;
-    }
-
-    .profile-description {
-      font-size: 1.1rem;
-      color: #000000;
-      margin-bottom: 1.5rem;
-      line-height: 1.7;
-      text-shadow: none;
-    }
-
-    .linkedin-link {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      background: rgba(10, 26, 42, 0.9);
-      color: #ffd700;
-      text-decoration: none;
-      padding: 0.75rem 1.5rem;
-      border-radius: 8px;
-      font-weight: 500;
-      transition: all 0.3s ease;
-      border: 2px solid #ffd700;
-      box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
-      letter-spacing: 1px;
-    }
-
-    .linkedin-link:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 0 25px #ffd700;
-      background: #ffd700;
-      color: #0a1a2a;
-    }
-
-    .apps-section {
-      background: rgba(10, 26, 42, 0.8);
-      border: 3px solid #ffd700;
-      border-radius: 15px;
-      padding: 3rem;
-      box-shadow: 0 0 30px rgba(255, 215, 0, 0.3);
-      backdrop-filter: blur(10px);
-      position: relative;
-    }
-
-    .apps-section::before {
-      content: '';
-      position: absolute;
-      top: -2px;
-      left: -2px;
-      right: -2px;
-      bottom: -2px;
-      background: linear-gradient(45deg, #ffd700, #ffed4e, #ffd700);
-      border-radius: 15px;
-      z-index: -1;
-      opacity: 0.7;
-    }
-
-    .section-title {
-      font-size: 2.5rem;
-      font-weight: 700;
-      color: #ffffff;
-      margin-bottom: 2rem;
+      opacity: 0;
       text-align: center;
-      text-shadow: 0 0 20px #ffd700;
-      letter-spacing: 2px;
+      white-space: nowrap;
     }
-
-    .apps-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-      gap: 2rem;
+    /* Vignette */
+    #vignette {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: 3;
+      pointer-events: none;
+      background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.7) 100%);
     }
-
-    .app-card {
-      background: rgba(15, 42, 58, 0.9);
-      border: 2px solid #ffd700;
-      border-radius: 12px;
-      padding: 2rem;
-      box-shadow: 0 0 20px rgba(255, 215, 0, 0.2);
-      transition: all 0.3s ease;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .app-card::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: -100%;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.1), transparent);
-      transition: left 0.5s;
-    }
-
-    .app-card:hover::before {
-      left: 100%;
-    }
-
-    .app-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 0 30px rgba(255, 215, 0, 0.4);
-      border-color: #ffed4e;
-    }
-
-    .app-title {
-      font-size: 1.5rem;
-      font-weight: 600;
-      color: #ffffff;
-      margin-bottom: 1rem;
-      text-shadow: 0 0 10px #ffd700;
-      letter-spacing: 1px;
-    }
-
-    .app-description {
-      color: #e0e0e0;
-      margin-bottom: 2rem;
-      line-height: 1.6;
-      text-shadow: 0 0 2px #000;
-    }
-
-    .app-link {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      background: rgba(10, 26, 42, 0.9);
-      color: #ffd700;
-      text-decoration: none;
-      padding: 0.75rem 1.5rem;
-      border-radius: 8px;
-      font-weight: 500;
-      transition: all 0.3s ease;
-      border: 2px solid #ffd700;
-      box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
-      letter-spacing: 1px;
-    }
-
-    .app-link:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 0 25px #ffd700;
-      background: #ffd700;
-      color: #0a1a2a;
-    }
-
-    .tech-stack {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-      margin-top: 1rem;
-      margin-bottom: 2rem;
-    }
-
-    .tech-tag {
-      background: rgba(15, 42, 58, 0.9);
-      color: #ffd700;
-      padding: 0.25rem 0.75rem;
-      border-radius: 15px;
-      font-size: 0.875rem;
-      font-weight: 500;
-      border: 1px solid #ffd700;
-      text-shadow: 0 0 2px #000;
-      box-shadow: 0 0 5px rgba(255, 215, 0, 0.2);
-    }
-
-    @media (max-width: 768px) {
-      .container {
-        padding: 1rem;
-      }
-      
-      .profile-section {
-        padding: 2rem;
-        text-align: center;
-      }
-      
-      .profile-image {
-        width: 150px;
-        height: 150px;
-      }
-      
-      .profile-name {
-        font-size: 2rem;
-      }
-      
-      .header h1 {
-        font-size: 2.5rem;
-      }
-      
-      .apps-grid {
-        grid-template-columns: 1fr;
-      }
+    /* Flash overlay for warp effect */
+    #flash {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: 10;
+      pointer-events: none;
+      background: white;
+      opacity: 0;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="header">
-      <h1>Home of Jimmi Bram</h1>
-      <p>portfolio and some apps I made</p>
-    </div>
-
-    <div class="profile-section">
-      <img src="images/JimmiPixel.png" alt="Jimmi Bram" class="profile-image">
-      <div class="profile-info">
-        <h2 class="profile-name">Jimmi Bram</h2>
-        <p class="profile-title">CTO, Technology Architect & Entrepreneur</p>
-        <p class="profile-description">
-          Hi, I'm Jimmi – a tech nerd with a background in software development, cybersecurity, and AI. I've spent over 20 years building stuff, leading dev teams, and designing systems that make a real difference. I’ve been CTO at places like Alm. Brand, led teams at Saxo Bank, and had my hands deep in everything from architecture to startups.
-          <br><br>
-          Right now, I’m building Skolemate (check it out at <a href="https://skolemate.dk" target="_blank" rel="noopener noreferrer">skolemate.dk</a>) – an AI-powered platform for schools. It's all about making everyday school life a bit more human, efficient, and future-ready. 
-          <br><br>
-          Thanks for stopping by – always happy to chat tech, education, or wild ideas. 
-        </p>
-        <div class="tech-stack">
-          <span class="tech-tag">CTO</span>
-          <span class="tech-tag">Builder of platforms</span>
-          <span class="tech-tag">Architecture</span>
-          <span class="tech-tag">Developer</span>
-          <span class="tech-tag">Leadership</span>
-          <span class="tech-tag">Entrepreneur</span>
-          <span class="tech-tag">Teaching</span>
-        </div>
-        <a href="https://dk.linkedin.com/in/jimmibram" target="_blank" rel="noopener noreferrer" class="linkedin-link">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
-          </svg>
-          Connect on LinkedIn
-        </a>
-      </div>
-    </div>
-
-    <div class="apps-section">
-      <h2 class="section-title">Some tools and apps I made</h2>
-      <div class="apps-grid">
-        <div class="app-card">
-          <h3 class="app-title">Mouse Polling Rate Test - Starship Mode</h3>
-          <p class="app-description">
-            An immersive sci-fi space adventure that doubles as a mouse polling rate tester. Navigate through a 3D space environment, shoot laser beams at geometric shapes, and get real-time feedback on your mouse's polling rate performance. Features include collision detection, particle effects, and detailed analytics.
-          </p>
-          <div class="tech-stack">
-            <span class="tech-tag">HTML5</span>
-            <span class="tech-tag">JavaScript</span>
-            <span class="tech-tag">Three.js</span>
-            <span class="tech-tag">WebGL</span>
-            <span class="tech-tag">Canvas API</span>
-          </div>
-          <a href="apps/mousetest/" target="_blank" rel="noopener noreferrer" class="app-link">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/>
-            </svg>
-            Launch App
-          </a>
-        </div>
-      </div>
-    </div>
+  <canvas id="stars"></canvas>
+  <div id="hud">
+    <div id="hud-text"></div>
   </div>
+  <div id="speed-indicator">
+    <div id="speed-label">Warp Factor</div>
+    <div id="speed-value">0.0</div>
+  </div>
+  <div id="scanlines"></div>
+  <div id="vignette"></div>
+  <div id="flash"></div>
+  <div class="corner tl"></div>
+  <div class="corner tr"></div>
+  <div class="corner bl"></div>
+  <div class="corner br"></div>
+  <canvas id="planet"></canvas>
+  <div id="planet-label">[ CLICK TO ENTER ]</div>
+
+  <script>
+  (function() {
+    // ── STAR FIELD ──────────────────────────────────────
+    const canvas = document.getElementById('stars');
+    const ctx = canvas.getContext('2d');
+    let W, H;
+
+    function resize() {
+      W = canvas.width = window.innerWidth;
+      H = canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    const NUM_STARS = 1200;
+    const stars = [];
+    for (let i = 0; i < NUM_STARS; i++) {
+      stars.push({
+        x: (Math.random() - 0.5) * 2,
+        y: (Math.random() - 0.5) * 2,
+        z: Math.random() * 4,
+        prevX: 0, prevY: 0,
+        color: Math.random() < 0.15 ? '#00e5ff' : Math.random() < 0.05 ? '#ff6600' : '#ffffff'
+      });
+    }
+
+    // ── NEBULA PARTICLES ────────────────────────────────
+    const NUM_NEBULA = 80;
+    const nebulae = [];
+    for (let i = 0; i < NUM_NEBULA; i++) {
+      nebulae.push({
+        x: (Math.random() - 0.5) * 2,
+        y: (Math.random() - 0.5) * 2,
+        z: Math.random() * 4 + 1,
+        size: Math.random() * 80 + 30,
+        hue: Math.random() < 0.5 ? 190 : 260,
+        alpha: Math.random() * 0.04 + 0.01
+      });
+    }
+
+    // ── STATE ───────────────────────────────────────────
+    let speed = 0;
+    let targetSpeed = 0;
+    let phase = 0; // 0=idle, 1=accelerating, 2=hyperspeed, 3=decel+planet
+    let phaseTime = 0;
+    let startTime = performance.now();
+    let planetVisible = false;
+    let planetScale = 0;
+    let planetTargetScale = 0;
+    let shakeIntensity = 0;
+
+    const hudText = document.getElementById('hud-text');
+    const speedValue = document.getElementById('speed-value');
+    const flash = document.getElementById('flash');
+    const planetCanvas = document.getElementById('planet');
+    const planetCtx = planetCanvas.getContext('2d');
+    const planetLabel = document.getElementById('planet-label');
+
+    // Start sequence after brief pause
+    setTimeout(() => { phase = 1; phaseTime = performance.now(); }, 800);
+
+    // ── PLANET DRAWING ──────────────────────────────────
+    function drawPlanet(size) {
+      const s = Math.max(Math.round(size), 10);
+      planetCanvas.width = s;
+      planetCanvas.height = s;
+      const r = s / 2;
+      const pc = planetCtx;
+
+      // Main sphere gradient
+      const grad = pc.createRadialGradient(r * 0.65, r * 0.4, r * 0.05, r, r, r);
+      grad.addColorStop(0, '#00ffcc');
+      grad.addColorStop(0.3, '#0088aa');
+      grad.addColorStop(0.7, '#003355');
+      grad.addColorStop(1, '#001122');
+
+      pc.beginPath();
+      pc.arc(r, r, r - 2, 0, Math.PI * 2);
+      pc.fillStyle = grad;
+      pc.fill();
+
+      // Surface detail rings
+      pc.strokeStyle = 'rgba(0, 229, 255, 0.15)';
+      pc.lineWidth = 1.5;
+      for (let i = 0; i < 6; i++) {
+        const yOff = (i - 2.5) * (r * 0.3);
+        pc.beginPath();
+        pc.ellipse(r, r + yOff, r * 0.9, r * 0.12, 0, 0, Math.PI * 2);
+        pc.stroke();
+      }
+
+      // Glow halo
+      const glow = pc.createRadialGradient(r, r, r * 0.8, r, r, r * 1.3);
+      glow.addColorStop(0, 'rgba(0, 229, 255, 0)');
+      glow.addColorStop(0.7, 'rgba(0, 229, 255, 0.08)');
+      glow.addColorStop(1, 'rgba(0, 229, 255, 0)');
+      pc.fillStyle = glow;
+      pc.fillRect(0, 0, s, s);
+
+      // Atmosphere rim
+      pc.beginPath();
+      pc.arc(r, r, r - 2, 0, Math.PI * 2);
+      pc.strokeStyle = 'rgba(0, 229, 255, 0.4)';
+      pc.lineWidth = 3;
+      pc.stroke();
+
+      // Text on planet
+      if (s > 100) {
+        const fontSize = Math.max(s * 0.11, 12);
+        pc.font = `900 ${fontSize}px 'Orbitron', sans-serif`;
+        pc.textAlign = 'center';
+        pc.textBaseline = 'middle';
+        // "Visit" above
+        const subSize = Math.max(fontSize * 0.45, 8);
+        pc.font = `400 ${subSize}px 'Orbitron', sans-serif`;
+        pc.fillStyle = '#00e5ff99';
+        pc.shadowColor = '#00e5ff';
+        pc.shadowBlur = 10;
+        pc.fillText('Visit', r, r - fontSize * 0.9);
+        pc.shadowBlur = 0;
+
+        // "BramLabs.io" center
+        pc.font = `900 ${fontSize}px 'Orbitron', sans-serif`;
+        pc.fillStyle = '#00ffcc';
+        pc.shadowColor = '#00e5ff';
+        pc.shadowBlur = 20;
+        pc.fillText('BramLabs.io', r, r);
+        pc.shadowBlur = 0;
+
+        // "To check out my ventures" below
+        pc.font = `400 ${subSize}px 'Orbitron', sans-serif`;
+        pc.fillStyle = '#00e5ff99';
+        pc.shadowColor = '#00e5ff';
+        pc.shadowBlur = 10;
+        pc.fillText('To check out my ventures', r, r + fontSize * 0.9);
+        pc.shadowBlur = 0;
+      }
+    }
+
+    // Planet click handler
+    planetCanvas.addEventListener('click', () => {
+      if (planetVisible) {
+        flash.style.transition = 'opacity 0.4s ease';
+        flash.style.opacity = '1';
+        setTimeout(() => {
+          window.location.href = 'https://bramlabs.io';
+        }, 500);
+      }
+    });
+
+    // ── ANIMATION ───────────────────────────────────────
+    function animate(now) {
+      requestAnimationFrame(animate);
+      const dt = 1 / 60;
+      const elapsed = (now - startTime) / 1000;
+
+      // Phase management
+      const pElapsed = (now - phaseTime) / 1000;
+
+      if (phase === 1) {
+        // Accelerating
+        targetSpeed = Math.min(pElapsed * 0.8, 3.5);
+        shakeIntensity = Math.min(pElapsed * 0.3, 1.5);
+        if (pElapsed > 1.5 && pElapsed < 2) {
+          hudText.textContent = 'ENGAGING HYPERDRIVE';
+          hudText.classList.add('visible');
+        }
+        if (pElapsed > 3) {
+          // Flash to hyperspeed
+          flash.style.transition = 'opacity 0.3s ease';
+          flash.style.opacity = '0.8';
+          setTimeout(() => {
+            flash.style.transition = 'opacity 1s ease';
+            flash.style.opacity = '0';
+          }, 300);
+          phase = 2;
+          phaseTime = now;
+          targetSpeed = 8;
+        }
+      } else if (phase === 2) {
+        // Hyperspeed cruise
+        shakeIntensity = 0.5;
+        if (pElapsed > 0.5) {
+          hudText.classList.remove('visible');
+        }
+        if (pElapsed > 4) {
+          phase = 3;
+          phaseTime = now;
+          targetSpeed = 0.3;
+        }
+      } else if (phase === 3) {
+        // Decelerate and show planet
+        shakeIntensity = Math.max(0, 1 - pElapsed * 0.5);
+        if (pElapsed > 1) {
+          hudText.classList.remove('visible');
+        }
+        if (pElapsed > 2) {
+          planetVisible = true;
+          const maxSize = Math.min(W, H) * 0.45;
+          planetTargetScale = maxSize;
+        }
+        targetSpeed = Math.max(0.15, 0.3 - pElapsed * 0.02);
+      }
+
+      // Smooth speed transition
+      speed += (targetSpeed - speed) * 0.03;
+
+      // Speed display
+      const warpFactor = (speed / 8 * 9.9).toFixed(1);
+      speedValue.textContent = warpFactor;
+      if (speed > 5) {
+        speedValue.style.color = '#ff4400';
+        speedValue.style.textShadow = '0 0 20px #ff4400';
+      } else if (speed > 2) {
+        speedValue.style.color = '#ffaa00';
+        speedValue.style.textShadow = '0 0 15px #ffaa00';
+      } else {
+        speedValue.style.color = '#00e5ff';
+        speedValue.style.textShadow = '0 0 15px #00e5ff';
+      }
+
+      // Shake
+      const sx = (Math.random() - 0.5) * shakeIntensity * 2;
+      const sy = (Math.random() - 0.5) * shakeIntensity * 2;
+
+      // Clear
+      ctx.fillStyle = `rgba(0, 2, 8, ${speed > 3 ? 0.15 : 0.3})`;
+      ctx.fillRect(0, 0, W, H);
+
+      const cx = W / 2 + sx;
+      const cy = H / 2 + sy;
+
+      // Draw nebula blobs
+      for (const n of nebulae) {
+        n.z -= speed * dt * 0.3;
+        if (n.z < 0.1) {
+          n.z = 4 + Math.random();
+          n.x = (Math.random() - 0.5) * 2;
+          n.y = (Math.random() - 0.5) * 2;
+        }
+        const sx2 = (n.x / n.z) * W + cx;
+        const sy2 = (n.y / n.z) * H + cy;
+        const sz = n.size / n.z;
+        const grad = ctx.createRadialGradient(sx2, sy2, 0, sx2, sy2, sz);
+        grad.addColorStop(0, `hsla(${n.hue}, 100%, 50%, ${n.alpha * (1 + speed * 0.1)})`);
+        grad.addColorStop(1, 'transparent');
+        ctx.fillStyle = grad;
+        ctx.fillRect(sx2 - sz, sy2 - sz, sz * 2, sz * 2);
+      }
+
+      // Draw stars
+      for (const star of stars) {
+        star.prevX = (star.x / star.z) * W + cx;
+        star.prevY = (star.y / star.z) * H + cy;
+
+        star.z -= speed * dt;
+        if (star.z < 0.01) {
+          star.z = 4;
+          star.x = (Math.random() - 0.5) * 2;
+          star.y = (Math.random() - 0.5) * 2;
+          star.prevX = (star.x / star.z) * W + cx;
+          star.prevY = (star.y / star.z) * H + cy;
+        }
+
+        const sx2 = (star.x / star.z) * W + cx;
+        const sy2 = (star.y / star.z) * H + cy;
+
+        const brightness = Math.min(1, (1 - star.z / 4) * (1 + speed * 0.3));
+        const lineWidth = Math.max(0.5, (1 - star.z / 4) * 2 * (1 + speed * 0.3));
+
+        ctx.beginPath();
+        ctx.moveTo(star.prevX, star.prevY);
+        ctx.lineTo(sx2, sy2);
+        ctx.strokeStyle = star.color;
+        ctx.globalAlpha = brightness;
+        ctx.lineWidth = lineWidth;
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+
+        // Star head glow
+        if (speed < 2 && star.z < 1) {
+          ctx.beginPath();
+          ctx.arc(sx2, sy2, 1.5, 0, Math.PI * 2);
+          ctx.fillStyle = star.color;
+          ctx.fill();
+        }
+      }
+
+      // Center warp glow during hyperspeed
+      if (speed > 2) {
+        const glowSize = speed * 40;
+        const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, glowSize);
+        grad.addColorStop(0, `rgba(0, 100, 255, ${speed * 0.02})`);
+        grad.addColorStop(0.5, `rgba(0, 50, 150, ${speed * 0.01})`);
+        grad.addColorStop(1, 'transparent');
+        ctx.fillStyle = grad;
+        ctx.fillRect(cx - glowSize, cy - glowSize, glowSize * 2, glowSize * 2);
+      }
+
+      // Chromatic tunnel rings during high speed
+      if (speed > 4) {
+        const ringCount = 5;
+        for (let i = 0; i < ringCount; i++) {
+          const progress = ((elapsed * 2 + i * 0.4) % 2) / 2;
+          const ringR = progress * Math.max(W, H) * 0.8;
+          const alpha = (1 - progress) * 0.08;
+          ctx.beginPath();
+          ctx.arc(cx, cy, ringR, 0, Math.PI * 2);
+          ctx.strokeStyle = `rgba(0, 229, 255, ${alpha})`;
+          ctx.lineWidth = 2;
+          ctx.stroke();
+        }
+      }
+
+      // ── PLANET ─────────────────────────────────────
+      if (planetVisible) {
+        planetScale += (planetTargetScale - planetScale) * 0.02;
+        const ps = Math.round(planetScale);
+        if (ps > 20) {
+          drawPlanet(ps);
+          planetCanvas.style.width = ps + 'px';
+          planetCanvas.style.height = ps + 'px';
+          planetCanvas.style.left = (W / 2 - ps / 2) + 'px';
+          planetCanvas.style.top = (H / 2 - ps / 2) + 'px';
+          planetCanvas.style.opacity = Math.min(1, (ps - 20) / 100);
+
+          // Label positioning
+          planetLabel.style.left = (W / 2 - 200) + 'px';
+          planetLabel.style.width = '400px';
+          planetLabel.style.top = (H / 2 + ps / 2 + 20) + 'px';
+          planetLabel.style.opacity = Math.min(1, (ps - 60) / 100);
+
+          // Pulsing glow on planet
+          const pulseGlow = 10 + Math.sin(elapsed * 3) * 8;
+          planetCanvas.style.boxShadow = `0 0 ${pulseGlow}px #00e5ff, 0 0 ${pulseGlow * 3}px rgba(0,229,255,0.3)`;
+        }
+      }
+
+      // HUD flicker effect
+      if (Math.random() < 0.005) {
+        hudText.style.opacity = '0.3';
+        setTimeout(() => { hudText.style.opacity = ''; }, 80);
+      }
+    }
+
+    requestAnimationFrame(animate);
+  })();
+  </script>
 </body>
 </html>
